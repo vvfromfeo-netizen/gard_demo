@@ -45,14 +45,19 @@
     }
 
     function submitDonation() {
-      const amount = document.getElementById('donate-amount').value;
+      const amount = parseInt(document.getElementById('donate-amount').value);
+      const name = document.getElementById('donate-name').value.trim() || 'Аноним';
       const email = document.getElementById('donate-email').value;
       
       if (!amount || amount <= 0) return alert('Введите сумму');
       if (!email) return alert('Введите email');
 
-      // Имитация редиректа на платежный шлюз
-      alert(`Перенаправление на защищенную страницу оплаты (Демо).\nСумма: ${amount} ₽.`);
+      // Сохраняем донат в базу
+      let donations = JSON.parse(localStorage.getItem('gart_donations') || '[]');
+      donations.push({ name: name, amount: amount, email: email, date: new Date().toLocaleDateString('ru-RU') });
+      localStorage.setItem('gart_donations', JSON.stringify(donations));
+
+      alert(`Перенаправление на защищенную страницу оплаты (Демо).\nСумма: ${amount} ₽.\n\nДонат записан в систему!`);
     }
   </script>
 </body>
