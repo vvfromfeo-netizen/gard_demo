@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>База участников — Админка ГАРТ</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-require="admin">
+  <main class="container" style="margin-top: 40px;">
+    <h2 style="margin-bottom: 30px;">База участников клуба</h2>
+    
+    <div class="card">
+      <table style="width: 100%; text-align: left; border-collapse: collapse;">
+        <thead>
+          <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
+            <th style="padding: 10px 0;">Имя</th>
+            <th style="padding: 10px 0;">Email</th>
+            <th style="padding: 10px 0;">Роль</th>
+            <th style="padding: 10px 0;">Статус</th>
+          </tr>
+        </thead>
+        <tbody id="users-list">
+          <!-- Заполняется JS -->
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/guard.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script>
+    function renderUsers() {
+      const tbody = document.getElementById('users-list');
+      
+      // Берем базовых пользователей из data.js и одобренных из заявок
+      let allUsers = [...GART_DATA.users];
+      
+      const approvedApps = JSON.parse(localStorage.getItem('gart_applications') || '[]').filter(a => a.status === 'approved');
+      approvedApps.forEach(app => {
+        // Проверяем, нет ли уже такого пользователя (чтобы не дублировать)
+        if (!allUsers.find(u => u.email === app.email)) {
+          allUsers.push({
+            name: app.name,
+            email: app.email,
+            role: 'member'
+          });
+        }
+      });
+
+      tbody.innerHTML = allUsers.map(u => {
+        const roleText = u.role === 'admin' ? 'Администратор' : (u.role === 'member' ? 'Участник' : 'Кандидат');
+        const roleColor = u.role === 'admin' ? '#4CAF50' : (u.role === 'member' ? 'var(--text-main)' : 'var(--text-muted)');
+        
+        return `
+          <tr style="border-bottom: 1px solid #222;">
+            <td style="padding: 12px 0; color: #fff; font-weight: bold;">${u.name}</td>
+            <td style="padding: 12px 0; color: var(--text-muted);">${u.email}</td>
+            <td style="padding: 12px 0; color: ${roleColor}; font-weight: bold; font-size: 14px;">${roleText}</td>
+            <td style="padding: 12px 0;"><span style="color: #4CAF50;">Активен</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', renderUsers);
+  </script>
+</body>
+</html>
