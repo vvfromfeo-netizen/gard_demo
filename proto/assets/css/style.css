@@ -1,0 +1,214 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Oswald:wght@500;700&display=swap');
+
+:root {
+  --bg-color: #000000;
+  --bg-card: #111111;
+  --accent: #FF7700;
+  --text-main: #DBDBDC;
+  --text-muted: #727271;
+  --border-color: #333333;
+  --font-heading: 'Oswald', sans-serif;
+  --font-text: 'Inter', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  font-family: var(--font-text);
+  line-height: 1.6;
+  padding-bottom: 60px; /* Место для dev-панели */
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #ffffff;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+a:hover {
+  opacity: 0.8;
+}
+
+/* --- КОМПОНЕНТЫ --- */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 12px 24px;
+  background-color: var(--accent);
+  color: #000;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn:hover {
+  background-color: #e66b00;
+  color: #000;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--accent);
+  border: 2px solid var(--accent);
+}
+
+.btn-outline:hover {
+  background: var(--accent);
+  color: #000;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 24px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px;
+  background: #000;
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-family: var(--font-text);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* --- ШАПКА И ПОДВАЛ --- */
+header {
+  background: rgba(0, 0, 0, 0.9);
+  border-bottom: 1px solid var(--border-color);
+  padding: 20px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 2px;
+}
+
+.logo span {
+  color: var(--accent);
+}
+
+nav a {
+  margin-left: 20px;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+nav a:hover {
+  color: var(--accent);
+}
+
+footer {
+  margin-top: 60px;
+  padding: 40px 0;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* --- DEV ПАНЕЛЬ (для презентации) --- */
+#dev-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #222;
+  border-top: 2px solid var(--accent);
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  z-index: 9999;
+}
+
+#dev-panel button {
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  padding: 5px 15px;
+  cursor: pointer;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+#dev-panel button:hover {
+  background: var(--accent);
+  color: #000;
+}
+
+/* --- СЕТКИ --- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.hero {
+  padding: 80px 0;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.hero h1 {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.hero p {
+  font-size: 20px;
+  color: var(--text-muted);
+  max-width: 800px;
+  margin: 0 auto 40px auto;
+}
