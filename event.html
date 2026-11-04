@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Событие — ГАРТ</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-require="member">
+  <main class="container" style="margin-top: 40px; max-width: 800px;">
+    <a href="events.html" style="color: var(--text-muted); font-size: 14px;">&larr; Назад к афише</a>
+    
+    <div class="card" style="margin-top: 20px;" id="event-details"></div>
+
+    <div id="discussion-section" style="margin-top: 40px; display: none;">
+      <h3 style="margin-bottom: 20px;">Обсуждение события</h3>
+      <div id="comments-container" style="margin-bottom: 20px;"></div>
+      
+      <div class="card" style="border-color: var(--accent);">
+        <div class="form-group">
+          <textarea id="comment-text" class="form-control" rows="2" placeholder="Поделитесь впечатлениями..."></textarea>
+        </div>
+        <button class="btn" onclick="addComment()">Отправить</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/guard.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script>
+    let currentEventId = null;
+
+    function loadEvent() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = parseInt(urlParams.get('id'));
+      currentEventId = id;
+      
+      const event = GART_DATA.events.find(e => e.id === id);
+      if (!event) {
+        document.getElementById('event-details').innerHTML = '<h2>Событие не найдено</h2>';
+        return;
+      }
+
+      document.getElementById('event-details').innerHTML = `
+        <h1 style="color: var(--accent); margin-bottom: 15px;">${event.title}</h1>
+        <p style="font-size: 18px; margin-bottom: 10px;">${event.date} | ${event.place}</p>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">Формат: ${event.format}</p>
+        ${event.status === 'upcoming' 
+          ? `<button class="btn" style="width: 100%;" onclick="alert('Вы записаны на событие! (Демо)')">Записаться на мероприятие</button>` 
+          : `<div style="background: #222; padding: 15px; border-left: 4px solid var(--text-muted);">Это событие уже прошло. Ниже вы можете обсудить его с участниками.</div>`
+        }
+      `;
+
+      if (event.status === 'past') {
+        document.getElementById('discussion-section').style.display = 'block';
+        renderComments();
+      }
+    }
+
+    function renderComments() {
+      const comments = JSON.parse(localStorage.getItem(`gart_event_${currentEventId}`) || '[]');
+      const container = document.getElementById('comments-container');
+      
+      if (comments.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted);">Пока нет комментариев. Будьте первым!</p>';
+        return;
+      }
+
+      container.innerHTML = comments.map(c => `
+        <div class="card" style="padding: 15px; margin-bottom: 10px;">
+          <strong style="color: var(--accent);">${c.author}</strong>
+          <p style="margin-top: 5px;">${c.text}</p>
+        </div>
+      `).join('');
+    }
+
+    function addComment() {
+      const text = document.getElementById('comment-text').value.trim();
+      if (!text) return;
+
+      const user = GART_AUTH.getCurrentUser();
+      const comments = JSON.parse(localStorage.getItem(`gart_event_${currentEventId}`) || '[]');
+      comments.push({ author: user.name, text: text });
+      
+      localStorage.setItem(`gart_event_${currentEventId}`, JSON.stringify(comments));
+      document.getElementById('comment-text').value = '';
+      renderComments();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadEvent);
+  </script>
+</body>
+</html>
