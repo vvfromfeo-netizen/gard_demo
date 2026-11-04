@@ -7,40 +7,68 @@ document.addEventListener('DOMContentLoaded', () => {
     return `<a href="${href}" class="${isActive ? 'nav-active' : ''}" style="${style}">${text}</a>`;
   };
 
+  // Генерация меню "Ещё" в зависимости от роли
+  let dropdownContent = `
+    <a href="index.html#about">О проекте</a>
+    <a href="stub.html">Новости</a>
+    <a href="stub.html">Правовая информация</a>
+  `;
+  
+  if (user) {
+    dropdownContent = `
+      <a href="index.html#about">О проекте</a>
+      <a href="stub.html">Новости</a>
+      <a href="stub.html">Партнеры</a>
+      <a href="stub.html">СМИ о нас</a>
+      <a href="stub.html">Отзывы</a>
+      <a href="stub.html">Контакты</a>
+      <a href="stub.html">Правовая информация</a>
+      <a href="#" onclick="GART_AUTH.logout(); window.location.reload();" style="color: #F44336; margin-top: 10px; border-top: 1px solid #333; padding-top: 15px;">Выйти</a>
+    `;
+  }
+
   const headerHTML = `
     <header>
       <div class="container header-inner">
+        <!-- Логотип ведет на главную -->
         <a href="index.html" class="logo">ГАРТ<span>.</span></a>
+        
         <nav style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: flex-end;">
-          ${navLink('index.html', 'Главная')}
           
-          ${user ? navLink('events.html', 'Афиша') : ''}
-          ${user ? navLink('feed.html', 'Лента') : ''}
-          
-          ${navLink('merch.html', 'Магазин')}
-          
-          ${user ? navLink('rating.html', 'Рейтинг') : ''}
-          ${user ? navLink('profile.html', 'Личный кабинет') : ''}
-          
-          ${user && user.role === 'admin' ? navLink('admin-applications.html', 'Заявки', 'color: #4CAF50;') : ''}
-          ${user && user.role === 'admin' ? navLink('admin-moderation.html', 'Модерация', 'color: #4CAF50;') : ''}
+          ${!user ? `
+            <!-- Меню для Гостя -->
+            ${navLink('index.html', 'Главная')}
+            ${navLink('stub.html', 'Партнеры')}
+            ${navLink('stub.html', 'СМИ о нас')}
+            ${navLink('stub.html', 'Отзывы')}
+            ${navLink('stub.html', 'Контакты')}
+          ` : ''}
 
-          <!-- Выпадающее меню "Ещё" -->
+          ${user ? `
+            <!-- Меню для Участника и Админа -->
+            ${navLink('events.html', 'Афиша')}
+            ${navLink('feed.html', 'Лента')}
+            ${navLink('merch.html', 'Магазин')}
+            ${navLink('rating.html', 'Рейтинг')}
+          ` : ''}
+
+          ${user && user.role === 'admin' ? `
+            <!-- Дополнительное меню для Админа -->
+            ${navLink('admin-applications.html', 'Заявки', 'color: #4CAF50;')}
+            ${navLink('admin-users.html', 'Участники', 'color: #4CAF50;')}
+          ` : ''}
+
+          <!-- Выпадающее меню "Ещё" (работает по клику) -->
           <div class="dropdown" id="dropdown-menu">
             <a href="#" id="dropdown-btn" style="cursor: pointer;">Ещё ▾</a>
             <div class="dropdown-content">
-              <a href="index.html#about">О проекте</a>
-              <a href="stub.html">Новости</a>
-              <a href="stub.html">Партнеры</a>
-              <a href="stub.html">СМИ о нас</a>
-              <a href="stub.html">Отзывы</a>
-              <a href="stub.html">Контакты</a>
-              <a href="stub.html">Правовая информация</a>
+              ${dropdownContent}
             </div>
           </div>
           
+          <!-- Вход или Аватарка -->
           ${user 
-            ? `<a href="#" onclick="GART_AUTH.logout(); window.location.reload();" style="color: var(--text-muted); margin-left: 10px;">Выйти</a>` 
+            ? `<a href="profile.html" class="user-avatar" title="Личный кабинет">${user.name.charAt(0).toUpperCase()}</a>` 
             : navLink('login.html', 'Войти')}
         </nav>
       </div>
@@ -72,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.insertAdjacentHTML('beforeend', devPanelHTML);
   }
 
-  // ЛОГИКА РАБОТЫ ВЫПАДАЮЩЕГО МЕНЮ (по клику)
+  // Логика дропдауна
   const dropdownBtn = document.getElementById('dropdown-btn');
   const dropdownMenu = document.getElementById('dropdown-menu');
 
