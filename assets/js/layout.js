@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
   
   const navLink = (href, text, style = '') => {
-    const isActive = currentPath === href;
+    const isActive = currentPath === href || (href.includes('#') && currentPath === href.split('#')[0]);
     return `<a href="${href}" class="${isActive ? 'nav-active' : ''}" style="${style}">${text}</a>`;
   };
 
@@ -13,25 +13,22 @@ document.addEventListener('DOMContentLoaded', () => {
         <a href="index.html" class="logo">ГАРТ<span>.</span></a>
         <nav style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: flex-end;">
           ${navLink('index.html', 'Главная')}
-          ${navLink('about.html', 'О проекте')}
-          ${navLink('news.html', 'Новости')}
+          <a href="index.html#about" style="margin-left: 20px; color: var(--text-main); font-weight: 500;">О проекте</a>
           
-          <!-- Закрытый контур: Афиша и Участники только для авторизованных -->
+          ${navLink('stub.html', 'Новости')}
           ${user ? navLink('events.html', 'Афиша') : ''}
-          ${user ? navLink('members.html', 'Участники') : ''}
+          ${navLink('merch.html', 'Интернет-магазин')}
           
-          ${navLink('merch.html', 'Мерч')}
-          
-          <!-- Выпадающее меню для статичных страниц (чтобы не загромождать) -->
-          <div style="position: relative; display: inline-block;">
-            <a href="#" style="cursor: pointer;">Ещё ▾</a>
-            <div style="position: absolute; right: 0; top: 100%; background: #111; border: 1px solid #333; padding: 10px; display: none; flex-direction: column; gap: 10px; z-index: 1000;" 
+          <!-- Выпадающее меню-заглушка -->
+          <div style="position: relative; display: inline-block; margin-left: 20px;">
+            <a href="#" style="cursor: pointer; color: var(--text-main); font-weight: 500;">Ещё ▾</a>
+            <div style="position: absolute; right: 0; top: 100%; background: #111; border: 1px solid #333; padding: 10px; display: none; flex-direction: column; gap: 10px; z-index: 1000; min-width: 200px;" 
                  onmouseover="this.style.display='flex'" onmouseout="this.style.display='none'">
-              ${navLink('partners.html', 'Партнеры')}
-              ${navLink('media.html', 'СМИ о нас')}
-              ${navLink('reviews.html', 'Отзывы')}
-              ${navLink('contacts.html', 'Контакты')}
-              ${navLink('legal.html', 'Правовая информация')}
+              ${navLink('stub.html', 'Партнеры')}
+              ${navLink('stub.html', 'СМИ о нас')}
+              ${navLink('stub.html', 'Отзывы')}
+              ${navLink('stub.html', 'Контакты')}
+              ${navLink('stub.html', 'Правовая информация')}
             </div>
           </div>
 
@@ -49,12 +46,11 @@ document.addEventListener('DOMContentLoaded', () => {
     </header>
   `;
   
-  // ... (остальной код layout.js без изменений - footerHTML и devPanelHTML)
   const footerHTML = `
     <footer>
       <div class="container">
         <p>© 2026 Мужской клуб "ГАРТ". Все права защищены.</p>
-        <p style="margin-top:10px; font-size:12px;">Прототип сайта. <a href="legal.html">Правовая информация</a></p>
+        <p style="margin-top:10px; font-size:12px;">Прототип сайта. <a href="stub.html">Правовая информация</a></p>
       </div>
     </footer>
   `;
