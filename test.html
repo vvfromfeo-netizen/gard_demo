@@ -26,6 +26,7 @@
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button class="btn" style="background: #4CAF50; color: #fff;" onclick="saveResult()">Сохранить результат</button>
         <button class="btn" onclick="alert('Запись на консультацию (Демо)')">Записаться на консультацию</button>
         <a href="apply.html" class="btn btn-outline">Подать заявку в клуб</a>
       </div>
@@ -75,7 +76,6 @@
         return alert('Пожалуйста, ответьте на все вопросы.');
       }
 
-      // Интерпретация (упрощенная для 4 вопросов, макс балл 12)
       let text = '';
       let level = '';
       if (totalScore <= 3) {
@@ -89,16 +89,31 @@
         level = 'high';
       }
 
-      // Сохраняем только обезличенный маркер (вместо сервера)
       let stats = JSON.parse(localStorage.getItem('gart_test_stats') || '{"low":0,"medium":0,"high":0}');
       stats[level]++;
       localStorage.setItem('gart_test_stats', JSON.stringify(stats));
 
-      // Показываем результат
       document.getElementById('test-container').style.display = 'none';
       document.getElementById('result-container').style.display = 'block';
       document.getElementById('result-score').innerText = totalScore;
       document.getElementById('result-text').innerText = text;
+    }
+
+    function saveResult() {
+      const score = document.getElementById('result-score').innerText;
+      const text = document.getElementById('result-text').innerText;
+      const user = GART_AUTH.getCurrentUser();
+      const userName = user ? user.name : 'Гость';
+      
+      const content = `Результат теста GAD-7\nПользователь: ${userName}\nДата: ${new Date().toLocaleDateString('ru-RU')}\nБаллы: ${score}\nЗаключение: ${text}`;
+      
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `GART_Test_${userName}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
     }
 
     document.addEventListener('DOMContentLoaded', renderQuestions);
