@@ -32,9 +32,16 @@
       </div>
       
       <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color);">
-        <h4 style="margin-bottom: 15px;">Ваша активность</h4>
-        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px;">Статистика по мероприятиям и тестам доступна администратору. Здесь вы можете скачать свои данные.</p>
-        <button class="btn btn-outline" onclick="alert('Данные отправлены на почту (Демо)')">Запросить выгрузку данных</button>
+        <h4 style="margin-bottom: 15px; color: var(--accent);">Моя физическая активность</h4>
+        <ul id="my-activity-list" style="list-style: none; padding: 0; margin-bottom: 30px;">
+           <!-- Заполняется JS -->
+        </ul>
+
+        <h4 style="margin-bottom: 15px; color: var(--accent);">Посещенные мероприятия</h4>
+        <ul style="list-style: none; padding: 0;">
+           <li style="padding: 10px 0; border-bottom: 1px solid #222;">Поход в горы (15.10.2026) <span style="color: #4CAF50; float: right;">✓ Был</span></li>
+           <li style="padding: 10px 0; border-bottom: 1px solid #222;">Чайная церемония (20.09.2026) <span style="color: #4CAF50; float: right;">✓ Был</span></li>
+        </ul>
       </div>
     </div>
   </main>
@@ -53,6 +60,22 @@
         if (user.role === 'admin') {
            document.getElementById('user-role').innerText = 'Администратор';
            document.getElementById('user-role').style.color = '#4CAF50';
+        }
+
+        // Вывод активности
+        const allActivity = JSON.parse(localStorage.getItem('gart_rating_new') || '[]');
+        const myActivity = allActivity.filter(a => a.name === user.name).sort((a,b) => new Date(b.date) - new Date(a.date));
+        
+        const list = document.getElementById('my-activity-list');
+        if (myActivity.length === 0) {
+          list.innerHTML = '<li style="color: var(--text-muted); font-size: 14px;">Вы еще не вносили результаты.</li>';
+        } else {
+          list.innerHTML = myActivity.map(a => `
+            <li style="padding: 10px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between;">
+              <span>${a.exercise}</span>
+              <strong style="color: var(--accent);">${a.value} <span style="font-size: 12px; color: #777; font-weight: normal;">(${a.date})</span></strong>
+            </li>
+          `).join('');
         }
       }
     });
