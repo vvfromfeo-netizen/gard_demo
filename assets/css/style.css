@@ -149,6 +149,14 @@ nav a:hover {
   color: var(--accent);
 }
 
+/* Активный пункт меню */
+nav a.nav-active {
+  color: var(--accent) !important;
+  font-weight: 700;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 2px;
+}
+
 footer {
   margin-top: 60px;
   padding: 40px 0;
