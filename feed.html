@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Лента сообщества — ГАРТ</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-require="member">
+  <main class="container" style="margin-top: 40px; max-width: 800px;">
+    <h2>Внутренняя площадка</h2>
+    <p style="color: var(--text-muted); margin-bottom: 30px;">Общение участников клуба. Только для своих.</p>
+
+    <!-- Форма нового поста -->
+    <div class="card" style="margin-bottom: 40px; border-color: var(--accent);">
+      <h3>Создать публикацию</h3>
+      <div class="form-group" style="margin-top: 15px;">
+        <textarea id="new-post-text" class="form-control" rows="3" placeholder="Поделитесь новостью или задайте вопрос..."></textarea>
+      </div>
+      <button class="btn" onclick="createPost()">Опубликовать</button>
+    </div>
+
+    <!-- Список постов -->
+    <div id="posts-container"></div>
+
+  </main>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/guard.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script>
+    function renderPosts() {
+      const posts = JSON.parse(localStorage.getItem('gart_posts') || '[]');
+      const container = document.getElementById('posts-container');
+      container.innerHTML = '';
+
+      // Рендерим в обратном порядке (новые сверху)
+      [...posts].reverse().forEach(post => {
+        const commentsHTML = post.comments.map(c => `
+          <div style="margin-left: 20px; padding: 10px; border-left: 2px solid var(--border-color); margin-top: 10px;">
+            <strong style="color: var(--accent);">${c.author}</strong>: ${c.text}
+          </div>
+        `).join('');
+
+        container.innerHTML += `
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+              <strong style="color: #fff; font-size: 18px;">${post.author}</strong>
+              <span style="color: var(--text-muted); font-size: 14px;">${post.date}</span>
+            </div>
+            <p style="font-size: 16px;">${post.text}</p>
+            ${commentsHTML ? `<div style="margin-top: 20px;">${commentsHTML}</div>` : ''}
+          </div>
+        `;
+      });
+    }
+
+    function createPost() {
+      const text = document.getElementById('new-post-text').value.trim();
+      if (!text) return alert('Введите текст');
+
+      const user = GART_AUTH.getCurrentUser();
+      const posts = JSON.parse(localStorage.getItem('gart_posts') || '[]');
+      
+      posts.push({
+        id: Date.now(),
+        author: user.name,
+        text: text,
+        date: new Date().toLocaleDateString('ru-RU'),
+        comments: []
+      });
+
+      localStorage.setItem('gart_posts', JSON.stringify(posts));
+      document.getElementById('new-post-text').value = '';
+      renderPosts();
+    }
+
+    // Инициализация
+    document.addEventListener('DOMContentLoaded', renderPosts);
+  </script>
+</body>
+</html>
