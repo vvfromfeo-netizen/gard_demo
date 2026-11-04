@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тест на тревожность — ГАРТ</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <main class="container" style="margin-top: 60px; max-width: 700px;">
+    <h2 style="text-align: center; margin-bottom: 10px;">Оценка уровня тревожности</h2>
+    <p style="text-align: center; color: var(--text-muted); margin-bottom: 30px;">Анонимный тест. Ответы обрабатываются только в вашем браузере и никуда не отправляются.</p>
+
+    <div id="test-container" class="card">
+      <div id="questions-list"></div>
+      <button class="btn" style="width: 100%; margin-top: 20px;" onclick="calculateResult()">Узнать результат</button>
+    </div>
+
+    <div id="result-container" class="card" style="display: none; text-align: center; border-color: var(--accent);">
+      <h3 style="color: var(--accent); margin-bottom: 15px;">Ваш результат</h3>
+      <h1 id="result-score" style="font-size: 48px; margin-bottom: 10px;">0</h1>
+      <p id="result-text" style="font-size: 18px; margin-bottom: 30px;"></p>
+      
+      <div style="background: #222; padding: 15px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; text-align: left;">
+        <p><strong>Важно:</strong> Это не диагноз. Тест лишь помогает понять ваше текущее состояние. Если вы чувствуете, что вам тяжело, мы рекомендуем обратиться к специалисту.</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button class="btn" onclick="alert('Запись на консультацию (Демо)')">Записаться на консультацию</button>
+        <a href="apply.html" class="btn btn-outline">Подать заявку в клуб</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/guard.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script>
+    function renderQuestions() {
+      const container = document.getElementById('questions-list');
+      let html = '';
+
+      GART_DATA.gad7.forEach((q, index) => {
+        html += `<div style="margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+          <p style="font-size: 16px; margin-bottom: 15px;">${index + 1}. ${q.q}</p>`;
+
+        q.options.forEach((opt, optIndex) => {
+          html += `
+            <label style="display: block; margin-bottom: 10px; cursor: pointer;">
+              <input type="radio" name="q${index}" value="${optIndex}" style="margin-right: 10px;">
+              ${opt}
+            </label>
+          `;
+        });
+        html += `</div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function calculateResult() {
+      let totalScore = 0;
+      let answeredAll = true;
+
+      GART_DATA.gad7.forEach((_, index) => {
+        const selected = document.querySelector(`input[name="q${index}"]:checked`);
+        if (selected) {
+          totalScore += parseInt(selected.value);
+        } else {
+          answeredAll = false;
+        }
+      });
+
+      if (!answeredAll) {
+        return alert('Пожалуйста, ответьте на все вопросы.');
+      }
+
+      // Интерпретация (упрощенная для 4 вопросов, макс балл 12)
+      let text = '';
+      let level = '';
+      if (totalScore <= 3) {
+        text = 'Минимальный уровень тревожности. Вы справляетесь с ситуацией.';
+        level = 'low';
+      } else if (totalScore <= 7) {
+        text = 'Умеренный уровень тревожности. Возможно, стоит обратить внимание на отдых и поддержку близких.';
+        level = 'medium';
+      } else {
+        text = 'Высокий уровень тревожности. Рекомендуем обратиться к специалисту и не оставаться с этим один на один.';
+        level = 'high';
+      }
+
+      // Сохраняем только обезличенный маркер (вместо сервера)
+      let stats = JSON.parse(localStorage.getItem('gart_test_stats') || '{"low":0,"medium":0,"high":0}');
+      stats[level]++;
+      localStorage.setItem('gart_test_stats', JSON.stringify(stats));
+
+      // Показываем результат
+      document.getElementById('test-container').style.display = 'none';
+      document.getElementById('result-container').style.display = 'block';
+      document.getElementById('result-score').innerText = totalScore;
+      document.getElementById('result-text').innerText = text;
+    }
+
+    document.addEventListener('DOMContentLoaded', renderQuestions);
+  </script>
+</body>
+</html>
