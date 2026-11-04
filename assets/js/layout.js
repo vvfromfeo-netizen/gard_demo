@@ -1,22 +1,28 @@
 document.addEventListener('DOMContentLoaded', () => {
   const user = GART_AUTH.getCurrentUser();
+  const currentPath = window.location.pathname.split('/').pop() || 'index.html';
   
+  // Функция для генерации ссылки с учетом активности
+  const navLink = (href, text, style = '') => {
+    const isActive = currentPath === href;
+    return `<a href="${href}" class="${isActive ? 'nav-active' : ''}" style="${style}">${text}</a>`;
+  };
+
   const headerHTML = `
     <header>
       <div class="container header-inner">
         <a href="index.html" class="logo">ГАРТ<span>.</span></a>
-        <nav style="display: flex; flex-wrap: wrap; gap: 10px;">
-          <a href="index.html">Главная</a>
-          <a href="events.html">Афиша</a>
-          ${user ? `<a href="feed.html">Лента</a>` : ''}
-          ${user ? `<a href="rating.html">Рейтинг</a>` : ''}
-          ${user ? `<a href="profile.html">Кабинет</a>` : ''}
-          <a href="donate.html" style="color: var(--accent);">Помочь</a>
-          ${user && user.role === 'admin' ? `<a href="admin-applications.html" style="color: #4CAF50;">Заявки</a>` : ''}
-          ${user && user.role === 'admin' ? `<a href="admin-moderation.html" style="color: #4CAF50;">Модерация</a>` : ''}
+        <nav style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+          ${navLink('index.html', 'Главная')}
+          ${navLink('events.html', 'Афиша')}
+          ${user ? navLink('feed.html', 'Лента') : ''}
+          ${user ? navLink('rating.html', 'Рейтинг') : ''}
+          ${user ? navLink('profile.html', 'Личный кабинет') : ''}
+          ${user && user.role === 'admin' ? navLink('admin-applications.html', 'Заявки', 'color: #4CAF50;') : ''}
+          ${user && user.role === 'admin' ? navLink('admin-moderation.html', 'Модерация', 'color: #4CAF50;') : ''}
           ${user 
-            ? `<a href="#" onclick="GART_AUTH.logout(); window.location.reload();" style="color: var(--text-muted);">Выйти</a>` 
-            : `<a href="login.html">Войти</a>`}
+            ? `<a href="#" onclick="GART_AUTH.logout(); window.location.reload();" style="color: var(--text-muted); margin-left: 20px;">Выйти</a>` 
+            : navLink('login.html', 'Войти')}
         </nav>
       </div>
     </header>
