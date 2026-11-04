@@ -13,30 +13,31 @@ document.addEventListener('DOMContentLoaded', () => {
         <a href="index.html" class="logo">ГАРТ<span>.</span></a>
         <nav style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: flex-end;">
           ${navLink('index.html', 'Главная')}
-          <a href="index.html#about" style="margin-left: 20px; color: var(--text-main); font-weight: 500;">О проекте</a>
           
-          ${navLink('stub.html', 'Новости')}
           ${user ? navLink('events.html', 'Афиша') : ''}
-          ${navLink('merch.html', 'Интернет-магазин')}
+          ${user ? navLink('feed.html', 'Лента') : ''}
           
-          <!-- Выпадающее меню-заглушка -->
-          <div style="position: relative; display: inline-block; margin-left: 20px;">
-            <a href="#" style="cursor: pointer; color: var(--text-main); font-weight: 500;">Ещё ▾</a>
-            <div style="position: absolute; right: 0; top: 100%; background: #111; border: 1px solid #333; padding: 10px; display: none; flex-direction: column; gap: 10px; z-index: 1000; min-width: 200px;" 
-                 onmouseover="this.style.display='flex'" onmouseout="this.style.display='none'">
-              ${navLink('stub.html', 'Партнеры')}
-              ${navLink('stub.html', 'СМИ о нас')}
-              ${navLink('stub.html', 'Отзывы')}
-              ${navLink('stub.html', 'Контакты')}
-              ${navLink('stub.html', 'Правовая информация')}
-            </div>
-          </div>
-
+          ${navLink('merch.html', 'Магазин')}
+          
           ${user ? navLink('rating.html', 'Рейтинг') : ''}
           ${user ? navLink('profile.html', 'Личный кабинет') : ''}
           
           ${user && user.role === 'admin' ? navLink('admin-applications.html', 'Заявки', 'color: #4CAF50;') : ''}
           ${user && user.role === 'admin' ? navLink('admin-moderation.html', 'Модерация', 'color: #4CAF50;') : ''}
+
+          <!-- Выпадающее меню "Ещё" -->
+          <div class="dropdown" id="dropdown-menu">
+            <a href="#" id="dropdown-btn" style="cursor: pointer;">Ещё ▾</a>
+            <div class="dropdown-content">
+              <a href="index.html#about">О проекте</a>
+              <a href="stub.html">Новости</a>
+              <a href="stub.html">Партнеры</a>
+              <a href="stub.html">СМИ о нас</a>
+              <a href="stub.html">Отзывы</a>
+              <a href="stub.html">Контакты</a>
+              <a href="stub.html">Правовая информация</a>
+            </div>
+          </div>
           
           ${user 
             ? `<a href="#" onclick="GART_AUTH.logout(); window.location.reload();" style="color: var(--text-muted); margin-left: 10px;">Выйти</a>` 
@@ -69,5 +70,22 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (!window.location.search.includes('clean=1')) {
     document.body.insertAdjacentHTML('beforeend', devPanelHTML);
+  }
+
+  // ЛОГИКА РАБОТЫ ВЫПАДАЮЩЕГО МЕНЮ (по клику)
+  const dropdownBtn = document.getElementById('dropdown-btn');
+  const dropdownMenu = document.getElementById('dropdown-menu');
+
+  if (dropdownBtn && dropdownMenu) {
+    dropdownBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      dropdownMenu.classList.toggle('show');
+    });
+
+    window.addEventListener('click', (e) => {
+      if (!dropdownMenu.contains(e.target)) {
+        dropdownMenu.classList.remove('show');
+      }
+    });
   }
 });
