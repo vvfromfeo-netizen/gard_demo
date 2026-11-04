@@ -15,27 +15,50 @@
       <!-- Форма ввода -->
       <div class="card" style="height: fit-content;">
         <h3>Внести результат</h3>
-        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">Сегодня я сделал:</p>
         <div class="form-group">
-          <label>Отжимания (кол-во)</label>
-          <input type="number" id="act-pushups" class="form-control" placeholder="Например: 50">
+          <label>Вид упражнения</label>
+          <select id="act-type" class="form-control">
+            <option value="Отжимания">Отжимания</option>
+            <option value="Подтягивания">Подтягивания</option>
+            <option value="Приседания">Приседания</option>
+            <option value="Бег (км)">Бег (км)</option>
+            <option value="Шаги">Шаги</option>
+          </select>
         </div>
         <div class="form-group">
-          <label>Шаги (кол-во)</label>
-          <input type="number" id="act-steps" class="form-control" placeholder="Например: 10000">
+          <label>Результат (кол-во)</label>
+          <input type="number" id="act-value" class="form-control" placeholder="Например: 50">
         </div>
-        <button class="btn" style="width: 100%;" onclick="submitActivity()">Добавить в рейтинг</button>
+        <button class="btn" style="width: 100%;" onclick="submitActivity()">Добавить</button>
       </div>
 
       <!-- Таблица рейтинга -->
       <div class="card">
-        <h3>Таблица лидеров</h3>
-        <table style="width: 100%; margin-top: 20px; text-align: left; border-collapse: collapse;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+          <h3>Таблица</h3>
+          <div style="display: flex; gap: 10px;">
+            <select id="filter-type" class="form-control" style="width: auto; padding: 5px 10px;" onchange="renderRating()">
+              <option value="all">Все упражнения</option>
+              <option value="Отжимания">Отжимания</option>
+              <option value="Подтягивания">Подтягивания</option>
+              <option value="Приседания">Приседания</option>
+              <option value="Бег (км)">Бег (км)</option>
+              <option value="Шаги">Шаги</option>
+            </select>
+            <select id="sort-type" class="form-control" style="width: auto; padding: 5px 10px;" onchange="renderRating()">
+              <option value="date">Сначала новые</option>
+              <option value="value">По количеству</option>
+            </select>
+          </div>
+        </div>
+        
+        <table style="width: 100%; text-align: left; border-collapse: collapse;">
           <thead>
-            <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
+            <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 14px;">
               <th style="padding: 10px 0;">Участник</th>
-              <th style="padding: 10px 0;">Отжимания</th>
-              <th style="padding: 10px 0;">Шаги</th>
+              <th style="padding: 10px 0;">Упражнение</th>
+              <th style="padding: 10px 0;">Результат</th>
+              <th style="padding: 10px 0;">Дата</th>
             </tr>
           </thead>
           <tbody id="rating-body">
@@ -51,50 +74,65 @@
   <script src="assets/js/guard.js"></script>
   <script src="assets/js/layout.js"></script>
   <script>
-    // Инициализация фейковых данных для рейтинга
-    if (!localStorage.getItem('gart_rating')) {
-      localStorage.setItem('gart_rating', JSON.stringify([
-        { name: 'Алексей', pushups: 150, steps: 45000 },
-        { name: 'Владимир', pushups: 200, steps: 30000 },
-        { name: 'Иван', pushups: 50, steps: 12000 }
-      ]));
+    if (!localStorage.getItem('gart_rating_new')) {
+      const initialData = [
+        { id: 1, name: 'Алексей', exercise: 'Отжимания', value: 50, date: '2026-11-04' },
+        { id: 2, name: 'Владимир', exercise: 'Бег (км)', value: 10, date: '2026-11-03' },
+        { id: 3, name: 'Иван', exercise: 'Отжимания', value: 70, date: '2026-11-01' }
+      ];
+      localStorage.setItem('gart_rating_new', JSON.stringify(initialData));
     }
 
     function renderRating() {
-      const data = JSON.parse(localStorage.getItem('gart_rating'));
-      // Сортировка по отжиманиям (или можно по общей сумме)
-      data.sort((a, b) => b.pushups - a.pushups);
+      let data = JSON.parse(localStorage.getItem('gart_rating_new'));
+      const filterType = document.getElementById('filter-type').value;
+      const sortType = document.getElementById('sort-type').value;
+
+      if (filterType !== 'all') {
+        data = data.filter(d => d.exercise === filterType);
+      }
+
+      if (sortType === 'date') {
+        data.sort((a, b) => new Date(b.date) - new Date(a.date));
+      } else {
+        data.sort((a, b) => b.value - a.value);
+      }
 
       const tbody = document.getElementById('rating-body');
+      if(data.length === 0) {
+         tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px 0; color: var(--text-muted);">Нет данных по этому фильтру.</td></tr>';
+         return;
+      }
+
       tbody.innerHTML = data.map(u => `
         <tr style="border-bottom: 1px solid #222;">
           <td style="padding: 12px 0; font-weight: bold; color: #fff;">${u.name}</td>
-          <td style="padding: 12px 0;">${u.pushups}</td>
-          <td style="padding: 12px 0;">${u.steps}</td>
+          <td style="padding: 12px 0; color: var(--text-muted);">${u.exercise}</td>
+          <td style="padding: 12px 0; color: var(--accent); font-weight: bold;">${u.value}</td>
+          <td style="padding: 12px 0; font-size: 12px; color: #777;">${u.date}</td>
         </tr>
       `).join('');
     }
 
     function submitActivity() {
-      const pushups = parseInt(document.getElementById('act-pushups').value) || 0;
-      const steps = parseInt(document.getElementById('act-steps').value) || 0;
+      const exercise = document.getElementById('act-type').value;
+      const value = parseInt(document.getElementById('act-value').value);
       
-      if (pushups === 0 && steps === 0) return alert('Введите хотя бы один результат');
+      if (!value || value <= 0) return alert('Введите корректный результат');
 
       const user = GART_AUTH.getCurrentUser();
-      let data = JSON.parse(localStorage.getItem('gart_rating'));
+      let data = JSON.parse(localStorage.getItem('gart_rating_new'));
       
-      const userIndex = data.findIndex(u => u.name === user.name);
-      if (userIndex !== -1) {
-        data[userIndex].pushups += pushups;
-        data[userIndex].steps += steps;
-      } else {
-        data.push({ name: user.name, pushups, steps });
-      }
+      data.push({
+        id: Date.now(),
+        name: user.name,
+        exercise: exercise,
+        value: value,
+        date: new Date().toISOString().split('T')[0]
+      });
 
-      localStorage.setItem('gart_rating', JSON.stringify(data));
-      document.getElementById('act-pushups').value = '';
-      document.getElementById('act-steps').value = '';
+      localStorage.setItem('gart_rating_new', JSON.stringify(data));
+      document.getElementById('act-value').value = '';
       renderRating();
       alert('Результат добавлен!');
     }
