@@ -32,7 +32,6 @@
       const user = GART_AUTH.getCurrentUser();
       const isAdmin = user && user.role === 'admin';
       
-      // Если админ — видит всё. Если юзер — только не скрытое.
       const visiblePosts = isAdmin ? allPosts : allPosts.filter(p => !p.hidden);
       
       const container = document.getElementById('posts-container');
@@ -55,14 +54,14 @@
               <div class="hidden-comments" id="hidden-${post.id}" style="display: none; margin-bottom: 15px;">
                 ${comments.slice(0, -1).map(c => `
                   <div style="margin-bottom: 10px; font-size: 14px; padding-left: 10px; border-left: 2px solid #333; opacity: ${c.hidden ? '0.4' : '1'};">
-                    <a href="user-profile.html?name=${encodeURIComponent(c.author)}" style="color:#fff; text-decoration: underline;">${c.author}</a>: ${c.text}
+                    <a href="user-profile.html?nickname=${encodeURIComponent(c.author)}" style="color:#fff; text-decoration: underline;">${c.author}</a>: ${c.text}
                     ${isAdmin ? `<button onclick="hideComment(${post.id}, '${c.text}')" style="background:transparent; border:none; color:#F44336; cursor:pointer; font-size:12px; margin-left:10px;">Скрыть</button>` : ''}
                   </div>
                 `).join('')}
               </div>
 
               <div style="margin-bottom: 15px; font-size: 14px; background: #1a1a1a; padding: 10px; border-left: 2px solid var(--accent); opacity: ${lastComment.hidden ? '0.4' : '1'};">
-                <a href="user-profile.html?name=${encodeURIComponent(lastComment.author)}" style="color:#fff; text-decoration: underline;">${lastComment.author}</a>: ${lastComment.text}
+                <a href="user-profile.html?nickname=${encodeURIComponent(lastComment.author)}" style="color:#fff; text-decoration: underline;">${lastComment.author}</a>: ${lastComment.text}
                 ${isAdmin ? `<button onclick="hideComment(${post.id}, '${lastComment.text}')" style="background:transparent; border:none; color:#F44336; cursor:pointer; font-size:12px; margin-left:10px;">Скрыть</button>` : ''}
               </div>
 
@@ -78,7 +77,7 @@
         return `
           <div class="card" style="opacity: ${post.hidden ? '0.4' : '1'}; border: 1px solid ${post.hidden ? '#F44336' : 'var(--border-color)'};">
             <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-              <a href="user-profile.html?name=${encodeURIComponent(post.author)}" style="color: #fff; font-size: 18px; font-family: var(--font-heading); text-decoration: underline;">${post.author}</a>
+              <a href="user-profile.html?nickname=${encodeURIComponent(post.author)}" style="color: #fff; font-size: 18px; font-family: var(--font-heading); text-decoration: underline;">${post.author}</a>
               <div>
                 <span style="color: var(--text-muted); font-size: 14px;">${post.date}</span>
                 ${isAdmin ? `<button onclick="hidePost(${post.id})" style="background:#F44336; color:#fff; border:none; padding:2px 8px; margin-left:10px; font-size:12px; border-radius:3px; cursor:pointer;">${post.hidden ? 'Восстановить' : 'Скрыть'}</button>` : ''}
@@ -140,7 +139,7 @@
       const user = GART_AUTH.getCurrentUser();
       const posts = JSON.parse(localStorage.getItem('gart_posts') || '[]');
       
-      posts.push({ id: Date.now(), author: user.name, text: text, date: new Date().toLocaleDateString('ru-RU'), comments: [], hidden: false });
+      posts.push({ id: Date.now(), author: user.nickname, text: text, date: new Date().toLocaleDateString('ru-RU'), comments: [], hidden: false });
       localStorage.setItem('gart_posts', JSON.stringify(posts));
       document.getElementById('new-post-text').value = '';
       renderPosts();
@@ -157,7 +156,7 @@
       const postIndex = posts.findIndex(p => p.id === postId);
       if (postIndex !== -1) {
         if (!posts[postIndex].comments) posts[postIndex].comments = [];
-        posts[postIndex].comments.push({ author: user.name, text: text, hidden: false });
+        posts[postIndex].comments.push({ author: user.nickname, text: text, hidden: false });
         localStorage.setItem('gart_posts', JSON.stringify(posts));
         renderPosts();
       }
