@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return `<a href="${href}" class="${isActive ? 'nav-active' : ''}" style="${style}">${text}</a>`;
   };
 
-  // Меню "Ещё" для гостей
   let dropdownContent = `
     <a href="index.html#about">О проекте</a>
     <a href="stub.html">Новости</a>
@@ -15,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     <a href="stub.html">Правовая информация</a>
   `;
   
-  // Меню "Ещё" для участников и админов
   if (user) {
     dropdownContent = `
       <a href="index.html#about">О проекте</a>
@@ -29,6 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
       <a href="#" onclick="GART_AUTH.logout(); window.location.reload();" style="color: #F44336; margin-top: 10px; border-top: 1px solid #333; padding-top: 15px;">Выйти</a>
     `;
   }
+
+  // Страховка для аватарки
+  const safeNickname = user ? (user.nickname || user.name || 'U') : '';
 
   const headerHTML = `
     <header>
@@ -66,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           
           ${user 
-            ? `<a href="profile.html" class="user-avatar" title="Личный кабинет">${user.nickname.charAt(0).toUpperCase()}</a>` 
+            ? `<a href="profile.html" class="user-avatar" title="Личный кабинет">${safeNickname.charAt(0).toUpperCase()}</a>` 
             : navLink('login.html', 'Войти')}
         </nav>
       </div>
