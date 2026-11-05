@@ -22,13 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
       <a href="stub.html">Партнеры</a>
       <a href="stub.html">СМИ о нас</a>
       <a href="stub.html">Отзывы</a>
-      <a href="stub.html">Контакты</a>
+      <a href="contacts.html">Контакты</a>
       <a href="stub.html">Правовая информация</a>
       <a href="#" onclick="GART_AUTH.logout(); window.location.reload();" style="color: #F44336; margin-top: 10px; border-top: 1px solid #333; padding-top: 15px;">Выйти</a>
     `;
   }
 
-  // Страховка для аватарки
   const safeNickname = user ? (user.nickname || user.name || 'U') : '';
 
   const headerHTML = `
@@ -44,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ${navLink('stub.html', 'Партнеры')}
             ${navLink('stub.html', 'СМИ о нас')}
             ${navLink('stub.html', 'Отзывы')}
-            ${navLink('stub.html', 'Контакты')}
+            ${navLink('contacts.html', 'Контакты')}
           ` : ''}
 
           ${user ? `
