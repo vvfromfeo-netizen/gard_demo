@@ -2,7 +2,6 @@ const GART_AUTH = {
   login: function(email) {
     let user = GART_DATA.users.find(u => u.email === email);
     
-    // Если не нашли среди тестовых, ищем среди одобренных заявок
     if (!user) {
       const approvedApps = JSON.parse(localStorage.getItem('gart_applications') || '[]').filter(a => a.status === 'approved');
       const app = approvedApps.find(a => a.email === email);
@@ -22,7 +21,15 @@ const GART_AUTH = {
   },
   getCurrentUser: function() {
     const user = localStorage.getItem('gart_current_user');
-    return user ? JSON.parse(user) : null;
+    if (!user) return null;
+    
+    const parsed = JSON.parse(user);
+    // ЗАЩИТА: Если пользователь залогинился ДО появления никнеймов
+    if (!parsed.nickname) {
+      parsed.nickname = parsed.name || 'User';
+      localStorage.setItem('gart_current_user', JSON.stringify(parsed));
+    }
+    return parsed;
   },
   hasRole: function(roles) {
     const user = this.getCurrentUser();
