@@ -7,17 +7,20 @@ document.addEventListener('DOMContentLoaded', () => {
     return `<a href="${href}" class="${isActive ? 'nav-active' : ''}" style="${style}">${text}</a>`;
   };
 
-  // Генерация меню "Ещё" в зависимости от роли
+  // Меню "Ещё" для гостей
   let dropdownContent = `
     <a href="index.html#about">О проекте</a>
     <a href="stub.html">Новости</a>
+    <a href="test.html">Тестирование</a>
     <a href="stub.html">Правовая информация</a>
   `;
   
+  // Меню "Ещё" для участников и админов
   if (user) {
     dropdownContent = `
       <a href="index.html#about">О проекте</a>
       <a href="stub.html">Новости</a>
+      <a href="test.html">Тестирование</a>
       <a href="stub.html">Партнеры</a>
       <a href="stub.html">СМИ о нас</a>
       <a href="stub.html">Отзывы</a>
@@ -30,14 +33,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const headerHTML = `
     <header>
       <div class="container header-inner">
-        <!-- Логотип ведет на главную -->
         <a href="index.html" class="logo">ГАРТ<span>.</span></a>
         
         <nav style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: flex-end;">
           
           ${!user ? `
-            <!-- Меню для Гостя -->
             ${navLink('index.html', 'Главная')}
+            ${navLink('rating.html', 'Рейтинг')}
             ${navLink('stub.html', 'Партнеры')}
             ${navLink('stub.html', 'СМИ о нас')}
             ${navLink('stub.html', 'Отзывы')}
@@ -45,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
           ` : ''}
 
           ${user ? `
-            <!-- Меню для Участника и Админа -->
             ${navLink('events.html', 'Афиша')}
             ${navLink('feed.html', 'Лента')}
             ${navLink('merch.html', 'Магазин')}
@@ -53,12 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
           ` : ''}
 
           ${user && user.role === 'admin' ? `
-            <!-- Дополнительное меню для Админа -->
             ${navLink('admin-applications.html', 'Заявки', 'color: #4CAF50;')}
             ${navLink('admin-users.html', 'Участники', 'color: #4CAF50;')}
           ` : ''}
 
-          <!-- Выпадающее меню "Ещё" (работает по клику) -->
           <div class="dropdown" id="dropdown-menu">
             <a href="#" id="dropdown-btn" style="cursor: pointer;">Ещё ▾</a>
             <div class="dropdown-content">
@@ -66,9 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
           
-          <!-- Вход или Аватарка -->
           ${user 
-            ? `<a href="profile.html" class="user-avatar" title="Личный кабинет">${user.name.charAt(0).toUpperCase()}</a>` 
+            ? `<a href="profile.html" class="user-avatar" title="Личный кабинет">${user.nickname.charAt(0).toUpperCase()}</a>` 
             : navLink('login.html', 'Войти')}
         </nav>
       </div>
@@ -100,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.insertAdjacentHTML('beforeend', devPanelHTML);
   }
 
-  // Логика дропдауна
   const dropdownBtn = document.getElementById('dropdown-btn');
   const dropdownMenu = document.getElementById('dropdown-menu');
 
