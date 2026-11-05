@@ -14,15 +14,13 @@
       <table style="width: 100%; text-align: left; border-collapse: collapse;">
         <thead>
           <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
-            <th style="padding: 10px 0;">Имя</th>
+            <th style="padding: 10px 0;">Имя (Реальное)</th>
+            <th style="padding: 10px 0;">Никнейм</th>
             <th style="padding: 10px 0;">Email</th>
             <th style="padding: 10px 0;">Роль</th>
-            <th style="padding: 10px 0;">Статус</th>
           </tr>
         </thead>
-        <tbody id="users-list">
-          <!-- Заполняется JS -->
-        </tbody>
+        <tbody id="users-list"></tbody>
       </table>
     </div>
   </main>
@@ -35,15 +33,14 @@
     function renderUsers() {
       const tbody = document.getElementById('users-list');
       
-      // Берем базовых пользователей из data.js и одобренных из заявок
-      let allUsers = [...GART_DATA.users];
+      let allUsers = GART_DATA.users.map(u => ({ name: u.name, nickname: u.nickname, email: u.email, role: u.role }));
       
       const approvedApps = JSON.parse(localStorage.getItem('gart_applications') || '[]').filter(a => a.status === 'approved');
       approvedApps.forEach(app => {
-        // Проверяем, нет ли уже такого пользователя (чтобы не дублировать)
         if (!allUsers.find(u => u.email === app.email)) {
           allUsers.push({
             name: app.name,
+            nickname: app.nickname || 'Не указан',
             email: app.email,
             role: 'member'
           });
@@ -57,9 +54,9 @@
         return `
           <tr style="border-bottom: 1px solid #222;">
             <td style="padding: 12px 0; color: #fff; font-weight: bold;">${u.name}</td>
+            <td style="padding: 12px 0; color: var(--accent); font-weight: bold;">${u.nickname}</td>
             <td style="padding: 12px 0; color: var(--text-muted);">${u.email}</td>
             <td style="padding: 12px 0; color: ${roleColor}; font-weight: bold; font-size: 14px;">${roleText}</td>
-            <td style="padding: 12px 0;"><span style="color: #4CAF50;">Активен</span></td>
           </tr>
         `;
       }).join('');
