@@ -62,11 +62,13 @@
     document.addEventListener('DOMContentLoaded', () => {
       const user = GART_AUTH.getCurrentUser();
       if (user) {
-        document.getElementById('user-name').innerText = user.nickname;
-        document.getElementById('user-nickname').value = user.nickname;
-        document.getElementById('user-realname').value = user.name;
+        const safeNickname = user.nickname || user.name || 'User';
+        
+        document.getElementById('user-name').innerText = safeNickname;
+        document.getElementById('user-nickname').value = safeNickname;
+        document.getElementById('user-realname').value = user.name || safeNickname;
         document.getElementById('user-email').value = user.email;
-        document.getElementById('user-initial').innerText = user.nickname.charAt(0).toUpperCase();
+        document.getElementById('user-initial').innerText = safeNickname.charAt(0).toUpperCase();
         
         if (user.role === 'admin') {
            document.getElementById('user-role').innerText = 'Администратор';
@@ -74,7 +76,7 @@
         }
 
         const allActivity = JSON.parse(localStorage.getItem('gart_rating_new') || '[]');
-        const myActivity = allActivity.filter(a => a.name === user.nickname).sort((a,b) => new Date(b.date) - new Date(a.date));
+        const myActivity = allActivity.filter(a => a.name === safeNickname).sort((a,b) => new Date(b.date) - new Date(a.date));
         
         const list = document.getElementById('my-activity-list');
         if (myActivity.length === 0) {
