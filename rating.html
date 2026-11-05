@@ -6,14 +6,14 @@
   <title>Рейтинг активности — ГАРТ</title>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body data-require="member">
+<body>
   <main class="container" style="margin-top: 40px;">
     <h2>Рейтинг активности</h2>
-    <p style="color: var(--text-muted); margin-bottom: 30px;">Мягкая мотивация. Вносите свои результаты и смотрите на других.</p>
+    <p style="color: var(--text-muted); margin-bottom: 30px;">Достижения участников клуба.</p>
 
     <div class="grid">
-      <!-- Форма ввода -->
-      <div class="card" style="height: fit-content;">
+      <!-- Форма ввода (скроется для гостя) -->
+      <div class="card" style="height: fit-content;" id="activity-form">
         <h3>Внести результат</h3>
         <div class="form-group">
           <label>Вид упражнения</label>
@@ -61,9 +61,7 @@
               <th style="padding: 10px 0;">Дата</th>
             </tr>
           </thead>
-          <tbody id="rating-body">
-            <!-- Заполняется через JS -->
-          </tbody>
+          <tbody id="rating-body"></tbody>
         </table>
       </div>
     </div>
@@ -76,9 +74,9 @@
   <script>
     if (!localStorage.getItem('gart_rating_new')) {
       const initialData = [
-        { id: 1, name: 'Алексей', exercise: 'Отжимания', value: 50, date: '2026-11-04' },
-        { id: 2, name: 'Владимир', exercise: 'Бег (км)', value: 10, date: '2026-11-03' },
-        { id: 3, name: 'Иван', exercise: 'Отжимания', value: 70, date: '2026-11-01' }
+        { id: 1, name: 'Alex', exercise: 'Отжимания', value: 50, date: '2026-11-04' },
+        { id: 2, name: 'Vova', exercise: 'Бег (км)', value: 10, date: '2026-11-03' },
+        { id: 3, name: 'Ivan', exercise: 'Отжимания', value: 70, date: '2026-11-01' }
       ];
       localStorage.setItem('gart_rating_new', JSON.stringify(initialData));
     }
@@ -121,11 +119,13 @@
       if (!value || value <= 0) return alert('Введите корректный результат');
 
       const user = GART_AUTH.getCurrentUser();
+      if (!user) return alert('Войдите, чтобы добавить результат');
+
       let data = JSON.parse(localStorage.getItem('gart_rating_new'));
       
       data.push({
         id: Date.now(),
-        name: user.name,
+        name: user.nickname,
         exercise: exercise,
         value: value,
         date: new Date().toISOString().split('T')[0]
@@ -137,7 +137,13 @@
       alert('Результат добавлен!');
     }
 
-    document.addEventListener('DOMContentLoaded', renderRating);
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = GART_AUTH.getCurrentUser();
+      if (!user) {
+        document.getElementById('activity-form').style.display = 'none';
+      }
+      renderRating();
+    });
   </script>
 </body>
 </html>
