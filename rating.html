@@ -12,7 +12,6 @@
     <p style="color: var(--text-muted); margin-bottom: 30px;">Достижения участников клуба.</p>
 
     <div class="grid">
-      <!-- Форма ввода (скроется для гостя) -->
       <div class="card" style="height: fit-content;" id="activity-form">
         <h3>Внести результат</h3>
         <div class="form-group">
@@ -32,7 +31,6 @@
         <button class="btn" style="width: 100%;" onclick="submitActivity()">Добавить</button>
       </div>
 
-      <!-- Таблица рейтинга -->
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
           <h3>Таблица</h3>
@@ -73,12 +71,11 @@
   <script src="assets/js/layout.js"></script>
   <script>
     if (!localStorage.getItem('gart_rating_new')) {
-      const initialData = [
-        { id: 1, name: 'Alex', exercise: 'Отжимания', value: 50, date: '2026-11-04' },
-        { id: 2, name: 'Vova', exercise: 'Бег (км)', value: 10, date: '2026-11-03' },
-        { id: 3, name: 'Ivan', exercise: 'Отжимания', value: 70, date: '2026-11-01' }
-      ];
-      localStorage.setItem('gart_rating_new', JSON.stringify(initialData));
+      localStorage.setItem('gart_rating_new', JSON.stringify([
+        { id: 1, name: 'Велес', exercise: 'Отжимания', value: 50, date: '2026-11-04' },
+        { id: 2, name: 'Свенельд', exercise: 'Бег (км)', value: 10, date: '2026-11-03' },
+        { id: 3, name: 'Ярополк', exercise: 'Отжимания', value: 70, date: '2026-11-01' }
+      ]));
     }
 
     function renderRating() {
@@ -86,25 +83,21 @@
       const filterType = document.getElementById('filter-type').value;
       const sortType = document.getElementById('sort-type').value;
 
-      if (filterType !== 'all') {
-        data = data.filter(d => d.exercise === filterType);
-      }
-
-      if (sortType === 'date') {
-        data.sort((a, b) => new Date(b.date) - new Date(a.date));
-      } else {
-        data.sort((a, b) => b.value - a.value);
-      }
+      if (filterType !== 'all') data = data.filter(d => d.exercise === filterType);
+      if (sortType === 'date') data.sort((a, b) => new Date(b.date) - new Date(a.date));
+      else data.sort((a, b) => b.value - a.value);
 
       const tbody = document.getElementById('rating-body');
       if(data.length === 0) {
-         tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px 0; color: var(--text-muted);">Нет данных по этому фильтру.</td></tr>';
+         tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px 0; color: var(--text-muted);">Нет данных.</td></tr>';
          return;
       }
 
       tbody.innerHTML = data.map(u => `
         <tr style="border-bottom: 1px solid #222;">
-          <td style="padding: 12px 0; font-weight: bold; color: #fff;">${u.name}</td>
+          <td style="padding: 12px 0; font-weight: bold;">
+            <a href="user-profile.html?nickname=${encodeURIComponent(u.name)}" style="color: #fff; text-decoration: underline;">${u.name}</a>
+          </td>
           <td style="padding: 12px 0; color: var(--text-muted);">${u.exercise}</td>
           <td style="padding: 12px 0; color: var(--accent); font-weight: bold;">${u.value}</td>
           <td style="padding: 12px 0; font-size: 12px; color: #777;">${u.date}</td>
@@ -113,24 +106,15 @@
     }
 
     function submitActivity() {
+      const user = GART_AUTH.getCurrentUser();
+      if (!user) return showAuthRequiredModal();
+      
       const exercise = document.getElementById('act-type').value;
       const value = parseInt(document.getElementById('act-value').value);
-      
       if (!value || value <= 0) return alert('Введите корректный результат');
 
-      const user = GART_AUTH.getCurrentUser();
-      if (!user) return alert('Войдите, чтобы добавить результат');
-
       let data = JSON.parse(localStorage.getItem('gart_rating_new'));
-      
-      data.push({
-        id: Date.now(),
-        name: user.nickname,
-        exercise: exercise,
-        value: value,
-        date: new Date().toISOString().split('T')[0]
-      });
-
+      data.push({ id: Date.now(), name: user.nickname, exercise, value, date: new Date().toISOString().split('T')[0] });
       localStorage.setItem('gart_rating_new', JSON.stringify(data));
       document.getElementById('act-value').value = '';
       renderRating();
@@ -139,9 +123,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       const user = GART_AUTH.getCurrentUser();
-      if (!user) {
-        document.getElementById('activity-form').style.display = 'none';
-      }
+      if (!user) document.getElementById('activity-form').style.display = 'none';
       renderRating();
     });
   </script>
