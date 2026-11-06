@@ -9,26 +9,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let dropdownContent = `
     <a href="index.html#about">О проекте</a>
-    <a href="stub.html">Новости</a>
-    <a href="test.html">Тестирование</a>
     <a href="stub.html">Правовая информация</a>
   `;
   
   if (user) {
     dropdownContent = `
       <a href="index.html#about">О проекте</a>
-      <a href="stub.html">Новости</a>
-      <a href="test.html">Тестирование</a>
       <a href="stub.html">Партнеры</a>
       <a href="stub.html">СМИ о нас</a>
       <a href="stub.html">Отзывы</a>
       <a href="contacts.html">Контакты</a>
+      <a href="test.html">Тестирование</a>
       <a href="stub.html">Правовая информация</a>
       <a href="#" onclick="GART_AUTH.logout(); window.location.reload();" style="color: #F44336; margin-top: 10px; border-top: 1px solid #333; padding-top: 15px;">Выйти</a>
     `;
   }
 
-  const safeNickname = user ? (user.nickname || user.name || 'U') : '';
+  const safeNickname = user ? (user.nickname || user.firstName || 'U') : '';
 
   const headerHTML = `
     <header>
@@ -39,16 +36,14 @@ document.addEventListener('DOMContentLoaded', () => {
           
           ${!user ? `
             ${navLink('index.html', 'Главная')}
+            ${navLink('news.html', 'Новости')}
             ${navLink('rating.html', 'Рейтинг')}
-            ${navLink('stub.html', 'Партнеры')}
-            ${navLink('stub.html', 'СМИ о нас')}
-            ${navLink('stub.html', 'Отзывы')}
-            ${navLink('contacts.html', 'Контакты')}
           ` : ''}
 
           ${user ? `
             ${navLink('events.html', 'Афиша')}
             ${navLink('feed.html', 'Лента')}
+            ${navLink('news.html', 'Новости')}
             ${navLink('merch.html', 'Магазин')}
             ${navLink('rating.html', 'Рейтинг')}
           ` : ''}
@@ -60,11 +55,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <div class="dropdown" id="dropdown-menu">
             <a href="#" id="dropdown-btn" style="cursor: pointer;">Ещё ▾</a>
-            <div class="dropdown-content">
-              ${dropdownContent}
-            </div>
+            <div class="dropdown-content">${dropdownContent}</div>
           </div>
           
+          ${user 
+            ? `<a href="messages.html" class="icon-badge" title="Сообщения">✉<span class="badge">1</span></a>` 
+            : ''}
+
           ${user 
             ? `<a href="profile.html" class="user-avatar" title="Личный кабинет">${safeNickname.charAt(0).toUpperCase()}</a>` 
             : navLink('login.html', 'Войти')}
@@ -77,7 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
     <footer>
       <div class="container">
         <p>© 2026 Мужской клуб "ГАРТ". Все права защищены.</p>
-        <p style="margin-top:10px; font-size:12px;">Прототип сайта. <a href="stub.html">Правовая информация</a></p>
       </div>
     </footer>
   `;
@@ -100,17 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const dropdownBtn = document.getElementById('dropdown-btn');
   const dropdownMenu = document.getElementById('dropdown-menu');
-
   if (dropdownBtn && dropdownMenu) {
-    dropdownBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      dropdownMenu.classList.toggle('show');
-    });
-
-    window.addEventListener('click', (e) => {
-      if (!dropdownMenu.contains(e.target)) {
-        dropdownMenu.classList.remove('show');
-      }
-    });
+    dropdownBtn.addEventListener('click', (e) => { e.preventDefault(); dropdownMenu.classList.toggle('show'); });
+    window.addEventListener('click', (e) => { if (!dropdownMenu.contains(e.target)) dropdownMenu.classList.remove('show'); });
   }
 });
