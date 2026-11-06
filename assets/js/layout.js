@@ -78,6 +78,22 @@ document.addEventListener('DOMContentLoaded', () => {
     </footer>
   `;
 
+  // МОДАЛЬНОЕ ОКНО (добавляется на все страницы)
+  const modalHTML = `
+    <div class="modal-overlay" id="auth-modal">
+      <div class="modal-content">
+        <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+        <div class="modal-icon">🔒</div>
+        <h3 class="modal-title">Требуется вход</h3>
+        <p class="modal-text">Чтобы совершить это действие, вам нужно войти в свой аккаунт или зарегистрироваться в клубе.</p>
+        <div class="modal-buttons">
+          <a href="login.html" class="btn" style="width: 100%;">Войти в аккаунт</a>
+          <a href="apply.html" class="btn btn-outline" style="width: 100%;">Подать заявку на вступление</a>
+        </div>
+      </div>
+    </div>
+  `;
+
   const devPanelHTML = `
     <div id="dev-panel">
       <span style="color:#fff; font-size:12px; align-self:center; margin-right:10px;">Режим демо:</span>
@@ -88,6 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
   `;
 
   document.body.insertAdjacentHTML('afterbegin', headerHTML);
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
   document.body.insertAdjacentHTML('beforeend', footerHTML);
   
   if (!window.location.search.includes('clean=1')) {
@@ -101,3 +118,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('click', (e) => { if (!dropdownMenu.contains(e.target)) dropdownMenu.classList.remove('show'); });
   }
 });
+
+// Глобальные функции для модального окна
+window.showAuthRequiredModal = function() {
+  const modal = document.getElementById('auth-modal');
+  if (modal) modal.style.display = 'flex';
+};
+
+window.closeAuthModal = function() {
+  const modal = document.getElementById('auth-modal');
+  if (modal) modal.style.display = 'none';
+};
