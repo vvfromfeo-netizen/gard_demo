@@ -20,9 +20,13 @@
       </div>
       <button class="btn" style="width: 100%;" onclick="doLogin()">Войти</button>
       
-      <div style="margin-top: 20px; text-align: center; font-size: 14px; color: var(--text-muted);">
-        <p>Тестовые аккаунты:</p>
-        <p>user@demo (Участник) / admin@demo (Админ)</p>
+      <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px;">Нет аккаунта?</p>
+        <a href="apply.html" class="btn btn-outline" style="width: 100%; display: block;">Подать заявку на вступление</a>
+      </div>
+
+      <div style="margin-top: 20px; text-align: center; font-size: 12px; color: var(--text-muted);">
+        <p>Тестовые аккаунты: user@demo / admin@demo</p>
       </div>
     </div>
   </main>
@@ -37,7 +41,7 @@
       if (GART_AUTH.login(email)) {
         const user = GART_AUTH.getCurrentUser();
         if (user.role === 'admin') window.location.href = 'admin-applications.html';
-        else window.location.href = 'feed.html';
+        else window.location.href = 'messages.html';
       } else {
         alert('Пользователь не найден. Используйте user@demo или admin@demo');
       }
