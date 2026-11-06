@@ -9,7 +9,7 @@
 <body data-require="member">
   <main class="container" style="margin-top: 40px;">
     <h2>Афиша мероприятий</h2>
-    <p style="color: var(--text-muted); margin-bottom: 30px;">Здесь вы можете узнать, куда и когда мы идем. Никаких уточнений в переписке.</p>
+    <p style="color: var(--text-muted); margin-bottom: 30px;">Здесь вы можете узнать, куда и когда мы идем.</p>
 
     <h3 style="margin-bottom: 20px; color: var(--accent);">Предстоящие события</h3>
     <div class="grid" id="upcoming-events"></div>
@@ -24,18 +24,23 @@
   <script src="assets/js/layout.js"></script>
   <script>
     function renderEvents() {
-      const events = GART_DATA.events; // Берем из data.js
+      const events = GART_DATA.events;
       const upcoming = events.filter(e => e.status === 'upcoming');
       const past = events.filter(e => e.status === 'past');
 
       const createCard = (e) => `
-        <div class="card">
-          <h4 style="color: #fff; margin-bottom: 10px;">${e.title}</h4>
+        <div class="card" style="${e.status === 'past' ? 'opacity: 0.75;' : ''}">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+            <h4 style="color: #fff;">${e.title}</h4>
+            <span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: ${e.status === 'past' ? '#444' : 'var(--accent)'}; color: ${e.status === 'past' ? '#aaa' : '#000'};">
+              ${e.status === 'past' ? 'Завершено' : 'Скоро'}
+            </span>
+          </div>
           <p style="color: var(--accent); font-weight: bold; margin-bottom: 10px;">${e.date}</p>
           <p style="color: var(--text-muted); margin-bottom: 5px;">Место: ${e.place}</p>
           <p style="color: var(--text-muted); margin-bottom: 20px;">Формат: ${e.format}</p>
-          <a href="event.html?id=${e.id}" class="btn btn-outline" style="width: 100%; text-align: center;">
-            ${e.status === 'upcoming' ? 'Подробнее / Записаться' : 'Обсуждение'}
+          <a href="event.html?id=${e.id}" class="btn btn-outline" style="width: 100%; text-align: center; display: block;">
+            Подробнее
           </a>
         </div>
       `;
