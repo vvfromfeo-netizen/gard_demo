@@ -323,3 +323,69 @@ footer {
 .msg-bubble { max-width: 80%; padding: 10px; border-radius: 8px; font-size: 14px; }
 .msg-mine { align-self: flex-end; background: var(--accent); color: #000; }
 .msg-other { align-self: flex-start; background: #333; color: #fff; }
+/* --- МОДАЛЬНОЕ ОКНО (ТРЕБУЕТСЯ АВТОРИЗАЦИЯ) --- */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: none; /* Скрыто по умолчанию */
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 40px 30px;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  color: var(--text-muted);
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+  background: none;
+  border: none;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: var(--accent);
+}
+
+.modal-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: 24px;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+}
+
+.modal-text {
+  color: var(--text-muted);
+  font-size: 15px;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.modal-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
