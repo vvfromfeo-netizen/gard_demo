@@ -9,25 +9,20 @@
 <body>
   <main class="container" style="margin-top: 40px;">
     <h2>Интернет-магазин</h2>
-    <p style="color: var(--text-muted); margin-bottom: 30px;">Символика, которая объединяет. Прибыль идет на развитие сообщества.</p>
+    <p style="color: var(--text-muted); margin-bottom: 30px;">Символика, которая объединяет.</p>
 
-    <div class="grid">
-      <div class="card">
-        <div style="height: 200px; background: #222; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; color: #555;">Фото</div>
-        <h3>Футболка ГАРТ</h3>
-        <p style="color: var(--accent); font-weight: bold; margin: 10px 0;">2 500 ₽</p>
-        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">Черная, хлопок 100%.</p>
-        <button class="btn" style="width: 100%;" onclick="buyItem('Футболка ГАРТ')">Купить</button>
+    <!-- Форма добавления товара (только для админа) -->
+    <div class="card" id="admin-add-item" style="display: none; margin-bottom: 30px; border-color: var(--accent);">
+      <h3>Добавить товар</h3>
+      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+        <input type="text" id="item-title" class="form-control" placeholder="Название">
+        <input type="number" id="item-price" class="form-control" placeholder="Цена (₽)">
       </div>
-
-      <div class="card">
-        <div style="height: 200px; background: #222; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; color: #555;">Фото</div>
-        <h3>Худи ГАРТ</h3>
-        <p style="color: var(--accent); font-weight: bold; margin: 10px 0;">4 000 ₽</p>
-        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">Плотное, с капюшоном.</p>
-        <button class="btn" style="width: 100%;" onclick="buyItem('Худи ГАРТ')">Купить</button>
-      </div>
+      <input type="text" id="item-desc" class="form-control" placeholder="Краткое описание" style="margin-top: 15px;">
+      <button class="btn" style="margin-top: 15px;" onclick="addItem()">Опубликовать</button>
     </div>
+
+    <div class="grid" id="shop-container"></div>
   </main>
 
   <script src="assets/js/data.js"></script>
@@ -35,22 +30,67 @@
   <script src="assets/js/guard.js"></script>
   <script src="assets/js/layout.js"></script>
   <script>
-    function buyItem(itemName) {
-      const user = GART_AUTH.getCurrentUser();
+    const user = GART_AUTH.getCurrentUser();
+    const isAdmin = user && user.role === 'admin';
+
+    function renderShop() {
+      const items = JSON.parse(localStorage.getItem('gart_shop') || '[]');
+      const container = document.getElementById('shop-container');
       
-      // Если гость — показываем модальное окно
+      if (isAdmin) {
+        document.getElementById('admin-add-item').style.display = 'block';
+      }
+
+      container.innerHTML = items.map(item => `
+        <div class="card">
+          <div style="height: 200px; background: #222; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; color: #555; position: relative;">
+            Фото
+            ${isAdmin ? `<button onclick="deleteItem(${item.id})" style="position: absolute; top: 10px; right: 10px; background: #F44336; color: #fff; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">Удалить</button>` : ''}
+          </div>
+          <h3>${item.title}</h3>
+          <p style="color: var(--accent); font-weight: bold; margin: 10px 0;">${item.price} ₽</p>
+          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">${item.desc}</p>
+          <button class="btn" style="width: 100%;" onclick="buyItem('${item.title}')">Купить</button>
+        </div>
+      `).join('');
+    }
+
+    function buyItem(itemName) {
       if (!user) {
         showAuthRequiredModal();
         return;
       }
-
-      // Если авторизован — идем в сообщения к админу
-      const admin = GART_DATA.users.find(u => u.role === 'admin');
-      const adminNick = admin ? admin.nickname : 'Рагнар';
-
+      // Владимир — это user@demo (Владимир)
+      const targetNick = 'Владимир';
       const text = `Здравствуйте, я заинтересовался покупкой: ${itemName}`;
-      window.location.href = `messages.html?with=${adminNick}&text=${encodeURIComponent(text)}`;
+      window.location.href = `messages.html?with=${targetNick}&text=${encodeURIComponent(text)}`;
     }
+
+    function addItem() {
+      const title = document.getElementById('item-title').value;
+      const price = document.getElementById('item-price').value;
+      const desc = document.getElementById('item-desc').value;
+      if (!title || !price) return alert('Заполните поля');
+
+      let items = JSON.parse(localStorage.getItem('gart_shop'));
+      items.push({ id: Date.now(), title, price: parseInt(price), desc });
+      localStorage.setItem('gart_shop', JSON.stringify(items));
+      
+      document.getElementById('item-title').value = '';
+      document.getElementById('item-price').value = '';
+      document.getElementById('item-desc').value = '';
+      renderShop();
+    }
+
+    function deleteItem(id) {
+      if (!confirm('Удалить товар?')) return;
+      let items = JSON.parse(localStorage.getItem('gart_shop'));
+      items = items.filter(i => i.id !== id);
+      localStorage.setItem('gart_shop', JSON.stringify(items));
+      renderShop();
+    }
+
+    document.addEventListener('DOMContentLoaded', renderShop);
   </script>
 </body>
 </html>
