@@ -42,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
           ${user ? `
             ${navLink('events.html', 'Афиша')}
-            ${navLink('feed.html', 'Лента')}
             ${navLink('news.html', 'Новости')}
             ${navLink('merch.html', 'Магазин')}
             ${navLink('rating.html', 'Рейтинг')}
@@ -59,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           
           ${user 
-            ? `<a href="messages.html" class="icon-badge" title="Сообщения">✉<span class="badge">1</span></a>` 
+            ? `<a href="messages.html" class="icon-badge" title="Сообщения">✉<span class="badge" id="msg-badge">1</span></a>` 
             : ''}
 
           ${user 
@@ -78,7 +77,6 @@ document.addEventListener('DOMContentLoaded', () => {
     </footer>
   `;
 
-  // МОДАЛЬНОЕ ОКНО (добавляется на все страницы)
   const modalHTML = `
     <div class="modal-overlay" id="auth-modal">
       <div class="modal-content">
@@ -98,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <div id="dev-panel">
       <span style="color:#fff; font-size:12px; align-self:center; margin-right:10px;">Режим демо:</span>
       <button onclick="GART_AUTH.logout(); window.location.href='index.html'">Гость</button>
-      <button onclick="GART_AUTH.login('user@demo'); window.location.href='feed.html'">Участник</button>
+      <button onclick="GART_AUTH.login('user@demo'); window.location.href='messages.html'">Участник</button>
       <button onclick="GART_AUTH.login('admin@demo'); window.location.href='admin-applications.html'">Админ</button>
     </div>
   `;
@@ -119,7 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Глобальные функции для модального окна
 window.showAuthRequiredModal = function() {
   const modal = document.getElementById('auth-modal');
   if (modal) modal.style.display = 'flex';
