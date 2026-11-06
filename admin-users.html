@@ -32,14 +32,13 @@
   <script>
     function renderUsers() {
       const tbody = document.getElementById('users-list');
-      
-      let allUsers = GART_DATA.users.map(u => ({ name: u.name, nickname: u.nickname, email: u.email, role: u.role }));
+      let allUsers = GART_DATA.users.map(u => ({ name: u.firstName + ' ' + u.lastName, nickname: u.nickname, email: u.email, role: u.role }));
       
       const approvedApps = JSON.parse(localStorage.getItem('gart_applications') || '[]').filter(a => a.status === 'approved');
       approvedApps.forEach(app => {
         if (!allUsers.find(u => u.email === app.email)) {
           allUsers.push({
-            name: app.name,
+            name: app.firstName + ' ' + app.lastName,
             nickname: app.nickname || 'Не указан',
             email: app.email,
             role: 'member'
@@ -54,7 +53,9 @@
         return `
           <tr style="border-bottom: 1px solid #222;">
             <td style="padding: 12px 0; color: #fff; font-weight: bold;">${u.name}</td>
-            <td style="padding: 12px 0; color: var(--accent); font-weight: bold;">${u.nickname}</td>
+            <td style="padding: 12px 0;">
+              <a href="user-profile.html?nickname=${encodeURIComponent(u.nickname)}" style="color: var(--accent); font-weight: bold; text-decoration: underline;">${u.nickname}</a>
+            </td>
             <td style="padding: 12px 0; color: var(--text-muted);">${u.email}</td>
             <td style="padding: 12px 0; color: ${roleColor}; font-weight: bold; font-size: 14px;">${roleText}</td>
           </tr>
