@@ -43,13 +43,17 @@
         return;
       }
 
+      const statusBadge = event.status === 'upcoming' 
+        ? '<span style="font-size: 12px; padding: 4px 10px; border-radius: 10px; background: var(--accent); color: #000;">Скоро</span>'
+        : '<span style="font-size: 12px; padding: 4px 10px; border-radius: 10px; background: #444; color: #aaa;">Завершено</span>';
+
       document.getElementById('event-details').innerHTML = `
-        <h1 style="color: var(--accent); margin-bottom: 15px;">${event.title}</h1>
+        <div style="display:flex; justify-content: space-between; align-items:flex-start; flex-wrap: wrap; gap: 10px;">
+          <h1 style="color: var(--accent); margin-bottom: 15px;">${event.title}</h1>
+          ${statusBadge}
+        </div>
         <p style="font-size: 18px; margin-bottom: 10px;">${event.date} | ${event.place}</p>
         <p style="color: var(--text-muted); margin-bottom: 20px;">Формат: ${event.format}</p>
-        <p style="color: ${event.status === 'past' ? '#777' : '#4CAF50'}; font-weight: bold;">
-          Статус: ${event.status === 'upcoming' ? 'Предстоит' : 'Завершено'}
-        </p>
       `;
       renderComments();
     }
@@ -65,13 +69,13 @@
         return;
       }
 
-      container.innerHTML = comments.map(c => `
+      container.innerHTML = comments.map((c, idx) => `
         <div class="card" style="padding: 15px; margin-bottom: 10px; display:flex; justify-content:space-between;">
           <div>
-            <strong style="color: var(--accent);">${c.author}</strong>
+            <a href="user-profile.html?nickname=${encodeURIComponent(c.author)}" style="color: var(--accent); font-weight: bold; text-decoration: underline;">${c.author}</a>
             <p style="margin-top: 5px;">${c.text}</p>
           </div>
-          ${isAdmin ? `<button onclick="deleteComment('${c.text}')" style="color:#F44336; background:none; border:none; cursor:pointer;">Удалить</button>` : ''}
+          ${isAdmin ? `<button onclick="deleteComment(${idx})" style="color:#F44336; background:none; border:none; cursor:pointer;">Удалить</button>` : ''}
         </div>
       `).join('');
     }
@@ -79,19 +83,18 @@
     function addComment() {
       const text = document.getElementById('comment-text').value.trim();
       if (!text) return;
-
       const user = GART_AUTH.getCurrentUser();
       const comments = JSON.parse(localStorage.getItem(`gart_event_${currentEventId}`) || '[]');
       comments.push({ author: user.nickname, text: text });
-      
       localStorage.setItem(`gart_event_${currentEventId}`, JSON.stringify(comments));
       document.getElementById('comment-text').value = '';
       renderComments();
     }
 
-    function deleteComment(text) {
+    function deleteComment(idx) {
+      if (!confirm('Удалить комментарий?')) return;
       let comments = JSON.parse(localStorage.getItem(`gart_event_${currentEventId}`));
-      comments = comments.filter(c => c.text !== text);
+      comments.splice(idx, 1);
       localStorage.setItem(`gart_event_${currentEventId}`, JSON.stringify(comments));
       renderComments();
     }
