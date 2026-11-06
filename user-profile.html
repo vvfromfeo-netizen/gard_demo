@@ -11,21 +11,20 @@
     <a href="feed.html" style="color: var(--text-muted); font-size: 14px;">&larr; Назад в ленту</a>
     
     <div class="card" style="margin-top: 20px;">
-      <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 30px;">
-        <div style="width: 80px; height: 80px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #000; font-family: var(--font-heading);" id="profile-initial">
-          ?
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; margin-bottom: 30px;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <div style="width: 80px; height: 80px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #000; font-family: var(--font-heading);" id="profile-initial">?</div>
+          <div>
+            <h2 id="profile-name" style="margin-bottom: 5px;">Загрузка...</h2>
+            <p style="color: var(--accent); font-size: 14px; text-transform: uppercase;">Участник клуба</p>
+          </div>
         </div>
-        <div>
-          <h2 id="profile-name" style="margin-bottom: 5px;">Загрузка...</h2>
-          <p style="color: var(--accent); font-size: 14px; text-transform: uppercase;">Участник клуба</p>
-        </div>
+        <button class="btn" id="btn-write" onclick="writeMessage()">Написать сообщение</button>
       </div>
 
       <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color);">
         <h4 style="margin-bottom: 15px; color: var(--accent);">Физическая активность</h4>
-        <ul id="profile-activity-list" style="list-style: none; padding: 0;">
-           <!-- Заполняется JS -->
-        </ul>
+        <ul id="profile-activity-list" style="list-style: none; padding: 0;"></ul>
       </div>
     </div>
   </main>
@@ -35,32 +34,31 @@
   <script src="assets/js/guard.js"></script>
   <script src="assets/js/layout.js"></script>
   <script>
+    let currentProfileNick = '';
+
+    function writeMessage() {
+      if (!currentProfileNick) return;
+      window.location.href = `messages.html?with=${currentProfileNick}`;
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
       const nickname = urlParams.get('nickname');
 
       if (!nickname) {
         document.getElementById('profile-name').innerText = 'Участник не найден';
+        document.getElementById('btn-write').style.display = 'none';
         return;
       }
 
+      currentProfileNick = nickname;
       document.getElementById('profile-name').innerText = nickname;
       document.getElementById('profile-initial').innerText = nickname.charAt(0).toUpperCase();
 
-      // Если зашел Админ, показываем реальное имя
-      const currentUser = GART_AUTH.getCurrentUser();
-      if (currentUser && currentUser.role === 'admin') {
-        let realName = '';
-        const mockUser = GART_DATA.users.find(u => u.nickname === nickname);
-        if (mockUser) {
-          realName = mockUser.name;
-        } else {
-          const app = JSON.parse(localStorage.getItem('gart_applications') || '[]').find(a => a.nickname === nickname);
-          if (app) realName = app.name;
-        }
-        if (realName) {
-          document.getElementById('profile-name').innerHTML = `${nickname} <span style="font-size:16px; color:var(--text-muted); font-weight:normal;">(${realName})</span>`;
-        }
+      // Скрываем кнопку, если смотрим свой же профиль
+      const user = GART_AUTH.getCurrentUser();
+      if (user && user.nickname === nickname) {
+        document.getElementById('btn-write').style.display = 'none';
       }
 
       const allActivity = JSON.parse(localStorage.getItem('gart_rating_new') || '[]');
