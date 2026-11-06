@@ -12,9 +12,16 @@
     
     <div id="news-container" style="margin-top: 30px;"></div>
 
-    <!-- Форма добавления (только для админа) -->
     <div class="card" id="add-news-form" style="display: none; border-color: var(--accent); margin-top: 40px;">
       <h3>Добавить новость</h3>
+      
+      <!-- Иконка добавления фото (визуальная заглушка) -->
+      <div style="border: 2px dashed #444; border-radius: 4px; padding: 30px; text-align: center; margin: 20px 0; cursor: pointer; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#777'" onmouseout="this.style.borderColor='#444'">
+        <div style="font-size: 32px; color: #666; margin-bottom: 10px;">📷</div>
+        <div style="color: #666; font-size: 14px;">Прикрепить фотографию</div>
+        <div style="color: #444; font-size: 12px; margin-top: 5px;">(Работает в боевой версии)</div>
+      </div>
+
       <div class="form-group"><input type="text" id="news-title" class="form-control" placeholder="Заголовок"></div>
       <div class="form-group"><textarea id="news-text" class="form-control" rows="3" placeholder="Текст новости"></textarea></div>
       <button class="btn" onclick="createNews()">Опубликовать</button>
@@ -38,10 +45,11 @@
 
       container.innerHTML = [...newsList].reverse().map(item => {
         const comments = item.comments || [];
-        const commentsHTML = comments.map(c => `
+        const commentsHTML = comments.map((c, idx) => `
           <div style="margin-top: 10px; padding: 10px; background: #1a1a1a; border-left: 2px solid var(--border-color); font-size: 14px;">
-            <strong>${c.author}:</strong> ${c.text}
-            ${isAdmin ? `<button onclick="deleteNewsComment(${item.id}, '${c.text}')" style="color:#F44336; background:none; border:none; cursor:pointer; float:right;">Удалить</button>` : ''}
+            <a href="user-profile.html?nickname=${encodeURIComponent(c.author)}" style="color: var(--accent); font-weight: bold; text-decoration: underline;">${c.author}</a>
+            <span style="color: #fff;">: ${c.text}</span>
+            ${isAdmin ? `<button onclick="deleteNewsComment(${item.id}, ${idx})" style="color:#F44336; background:none; border:none; cursor:pointer; float:right; font-size:12px;">Удалить</button>` : ''}
           </div>
         `).join('');
 
@@ -49,7 +57,7 @@
           <div class="card" style="margin-bottom: 20px;">
             <div style="display:flex; justify-content:space-between;">
               <span style="color: var(--accent); font-size: 14px;">${item.date}</span>
-              ${isAdmin ? `<button onclick="deleteNews(${item.id})" style="color:#F44336; background:none; border:none; cursor:pointer;">Удалить новость</button>` : ''}
+              ${isAdmin ? `<button onclick="deleteNews(${item.id})" style="color:#F44336; background:none; border:none; cursor:pointer; font-size:14px;">Удалить новость</button>` : ''}
             </div>
             <h3 style="margin: 10px 0;">${item.title}</h3>
             <p style="color: var(--text-muted);">${item.text}</p>
@@ -102,11 +110,11 @@
       }
     }
 
-    function deleteNewsComment(newsId, commentText) {
+    function deleteNewsComment(newsId, commentIdx) {
       let news = JSON.parse(localStorage.getItem('gart_news'));
       const item = news.find(n => n.id === newsId);
       if (item) {
-        item.comments = item.comments.filter(c => c.text !== commentText);
+        item.comments.splice(commentIdx, 1);
         localStorage.setItem('gart_news', JSON.stringify(news));
         renderNews();
       }
