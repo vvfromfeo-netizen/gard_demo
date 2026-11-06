@@ -11,11 +11,13 @@
     <h2 style="text-align: center; margin-bottom: 10px;">Оценка уровня тревожности</h2>
     <p style="text-align: center; color: var(--text-muted); margin-bottom: 30px;">Анонимный тест. Ответы обрабатываются только в вашем браузере и никуда не отправляются.</p>
 
+    <!-- Контейнер с вопросами -->
     <div id="test-container" class="card">
       <div id="questions-list"></div>
       <button class="btn" style="width: 100%; margin-top: 20px;" onclick="calculateResult()">Узнать результат</button>
     </div>
 
+    <!-- Контейнер с результатом (скрыт по умолчанию) -->
     <div id="result-container" class="card" style="display: none; text-align: center; border-color: var(--accent);">
       <h3 style="color: var(--accent); margin-bottom: 15px;">Ваш результат</h3>
       <h1 id="result-score" style="font-size: 48px; margin-bottom: 10px;">0</h1>
@@ -27,8 +29,8 @@
 
       <div style="display: flex; flex-direction: column; gap: 10px;">
         <button class="btn" style="background: #4CAF50; color: #fff;" onclick="saveResult()">Сохранить результат</button>
-        <button class="btn" onclick="alert('Запись на консультацию (Демо)')">Записаться на консультацию</button>
-        <a href="apply.html" class="btn btn-outline">Подать заявку в клуб</a>
+        <button class="btn" onclick="handleConsultation()">Записаться на консультацию</button>
+        <a href="apply.html" class="btn btn-outline" style="display: block; text-align: center;">Подать заявку в клуб</a>
       </div>
     </div>
   </main>
@@ -38,6 +40,7 @@
   <script src="assets/js/guard.js"></script>
   <script src="assets/js/layout.js"></script>
   <script>
+    // 1. Рендер вопросов
     function renderQuestions() {
       const container = document.getElementById('questions-list');
       let html = '';
@@ -59,6 +62,7 @@
       container.innerHTML = html;
     }
 
+    // 2. Подсчет результатов
     function calculateResult() {
       let totalScore = 0;
       let answeredAll = true;
@@ -78,6 +82,7 @@
 
       let text = '';
       let level = '';
+      // Интерпретация для 4 вопросов (макс. балл 12)
       if (totalScore <= 3) {
         text = 'Минимальный уровень тревожности. Вы справляетесь с ситуацией.';
         level = 'low';
@@ -89,21 +94,24 @@
         level = 'high';
       }
 
+      // Сохраняем обезличенную статистику (вместо отправки на сервер)
       let stats = JSON.parse(localStorage.getItem('gart_test_stats') || '{"low":0,"medium":0,"high":0}');
       stats[level]++;
       localStorage.setItem('gart_test_stats', JSON.stringify(stats));
 
+      // Переключаем экраны
       document.getElementById('test-container').style.display = 'none';
       document.getElementById('result-container').style.display = 'block';
       document.getElementById('result-score').innerText = totalScore;
       document.getElementById('result-text').innerText = text;
     }
 
+    // 3. Сохранение в файл
     function saveResult() {
       const score = document.getElementById('result-score').innerText;
       const text = document.getElementById('result-text').innerText;
       const user = GART_AUTH.getCurrentUser();
-      const userName = user ? user.name : 'Гость';
+      const userName = user ? user.nickname : 'Гость';
       
       const content = `Результат теста GAD-7\nПользователь: ${userName}\nДата: ${new Date().toLocaleDateString('ru-RU')}\nБаллы: ${score}\nЗаключение: ${text}`;
       
@@ -116,6 +124,20 @@
       URL.revokeObjectURL(url);
     }
 
+    // 4. Запись на консультацию (с проверкой авторизации)
+    function handleConsultation() {
+      const user = GART_AUTH.getCurrentUser();
+      
+      if (!user) {
+        // Если гость — вызываем модальное окно из layout.js
+        showAuthRequiredModal();
+      } else {
+        // Если вошел — демо-уведомление
+        alert('Запись на консультацию (Демо)\nНаш координатор свяжется с вами.');
+      }
+    }
+
+    // Запуск при загрузке страницы
     document.addEventListener('DOMContentLoaded', renderQuestions);
   </script>
 </body>
