@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Сообщения — ГАРТ</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-require="member">
+  <main class="container" style="margin-top: 40px;">
+    <h2>Сообщения</h2>
+    
+    <div class="chat-layout" style="margin-top: 20px;">
+      <!-- Левая колонка -->
+      <div class="chat-sidebar">
+        <div class="chat-tabs">
+          <div class="chat-tab active" id="tab-general" onclick="switchTab('general')">Чаты</div>
+          <div class="chat-tab" id="tab-personal" onclick="switchTab('personal')">Личные</div>
+        </div>
+        
+        <div id="sidebar-content" style="overflow-y: auto; flex:1;">
+          <!-- Сюда рендерятся списки тем или юзеров -->
+        </div>
+
+        <div id="admin-add-topic" style="display:none; padding: 10px; border-top: 1px solid #333;">
+          <button class="btn" style="width: 100%; padding: 5px; font-size: 12px;" onclick="addTopic()">+ Новая тема</button>
+        </div>
+      </div>
+
+      <!-- Правая колонка (Чат) -->
+      <div class="chat-main">
+        <div class="chat-header" id="chat-header">Выберите чат</div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area" id="chat-input-area" style="display: none;">
+          <input type="text" id="msg-input" class="form-control" placeholder="Написать сообщение...">
+          <button class="btn" onclick="sendMessage()">Отправить</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/guard.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script>
+    let currentTab = 'general';
+    let currentChatId = null;
+    const user = GART_AUTH.getCurrentUser();
+    const isAdmin = user && user.role === 'admin';
+
+    // При загрузке проверяем URL на наличие автозаполнения (из магазина)
+    const urlParams = new URLSearchParams(window.location.search);
+    const startChatWith = urlParams.get('with');
+    const prefillText = urlParams.get('text');
+
+    if (startChatWith) {
+      currentTab = 'personal';
+      switchTab('personal');
+      setTimeout(() => {
+        openChat(`dm_${startChatWith}`);
+        if (prefillText) document.getElementById('msg-input').value = prefillText;
+      }, 100);
+    } else {
+      switchTab('general');
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.getElementById('tab-general').classList.remove('active');
+      document.getElementById('tab-personal').classList.remove('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      
+      document.getElementById('admin-add-topic').style.display = (tab === 'general' && isAdmin) ? 'block' : 'none';
+      
+      renderSidebar();
+      document.getElementById('chat-header').innerText = 'Выберите чат';
+      document.getElementById('chat-messages').innerHTML = '';
+      document.getElementById('chat-input-area').style.display = 'none';
+    }
+
+    function renderSidebar() {
+      const container = document.getElementById('sidebar-content');
+      container.innerHTML = '';
+
+      if (currentTab === 'general') {
+        const topics = JSON.parse(localStorage.getItem('gart_chat_topics') || '[]');
+        topics.forEach(t => {
+          container.innerHTML += `
+            <div class="chat-list-item" onclick="openChat('topic_${t}')" id="list-topic_${t}">
+              <span># ${t}</span>
+              ${isAdmin ? `<span onclick="event.stopPropagation(); deleteTopic('${t}')" style="color:#F44336; font-size:12px; cursor:pointer;">Удалить</span>` : ''}
+            </div>
+          `;
+        });
+      } else {
+        // Личные чаты со всеми, кроме себя
+        const users = GART_DATA.users.filter(u => u.email !== user.email);
+        const approved = JSON.parse(localStorage.getItem('gart_applications') || '[]').filter(a => a.status === 'approved');
+        const allUsers = [...users, ...approved];
+
+        allUsers.forEach(u => {
+          const nick = u.nickname;
+          container.innerHTML += `
+            <div class="chat-list-item" onclick="openChat('dm_${nick}')" id="list-dm_${nick}">
+              <span>${nick}</span>
+            </div>
+          `;
+        });
+      }
+    }
+
+    function openChat(chatId) {
+      currentChatId = chatId;
+      
+      // Подсветка в списке
+      document.querySelectorAll('.chat-list-item').forEach(el => el.classList.remove('active'));
+      const activeEl = document.getElementById(`list-${chatId}`);
+      if (activeEl) activeEl.classList.add('active');
+
+      // Заголовок
+      let headerText = chatId.replace('topic_', '# ').replace('dm_', 'Диалог с ');
+      document.getElementById('chat-header').innerText = headerText;
+      document.getElementById('chat-input-area').style.display = 'flex';
+      
+      renderMessages();
+    }
+
+    function renderMessages() {
+      const allMsgs = JSON.parse(localStorage.getItem('gart_messages') || '{}');
+      const chatMsgs = allMsgs[currentChatId] || [];
+      const container = document.getElementById('chat-messages');
+      
+      container.innerHTML = chatMsgs.map(m => `
+        <div class="msg-bubble ${m.author === user.nickname ? 'msg-mine' : 'msg-other'}">
+          <div style="font-size: 10px; margin-bottom: 3px; opacity: 0.7;">${m.author}</div>
+          ${m.text}
+          ${isAdmin ? `<button onclick="deleteMsg('${m.text}')" style="background:none; border:none; color:red; font-size:10px; cursor:pointer; float:right;">x</button>` : ''}
+        </div>
+      `).join('');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('msg-input');
+      const text = input.value.trim();
+      if (!text || !currentChatId) return;
+
+      let allMsgs = JSON.parse(localStorage.getItem('gart_messages') || '{}');
+      if (!allMsgs[currentChatId]) allMsgs[currentChatId] = [];
+      
+      allMsgs[currentChatId].push({ author: user.nickname, text });
+      localStorage.setItem('gart_messages', JSON.stringify(allMsgs));
+      input.value = '';
+      renderMessages();
+    }
+
+    function addTopic() {
+      const name = prompt('Введите название темы:');
+      if (!name) return;
+      let topics = JSON.parse(localStorage.getItem('gart_chat_topics'));
+      topics.push(name);
+      localStorage.setItem('gart_chat_topics', JSON.stringify(topics));
+      renderSidebar();
+    }
+
+    function deleteTopic(name) {
+      if (!confirm('Удалить тему?')) return;
+      let topics = JSON.parse(localStorage.getItem('gart_chat_topics'));
+      topics = topics.filter(t => t !== name);
+      localStorage.setItem('gart_chat_topics', JSON.stringify(topics));
+      renderSidebar();
+    }
+
+    function deleteMsg(text) {
+      let allMsgs = JSON.parse(localStorage.getItem('gart_messages') || '{}');
+      if (allMsgs[currentChatId]) {
+        allMsgs[currentChatId] = allMsgs[currentChatId].filter(m => m.text !== text);
+        localStorage.setItem('gart_messages', JSON.stringify(allMsgs));
+        renderMessages();
+      }
+    }
+  </script>
+</body>
+</html>
