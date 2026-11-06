@@ -32,12 +32,17 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="container header-inner">
         <a href="index.html" class="logo">ГАРТ<span>.</span></a>
         
-        <nav style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: flex-end;">
+        <nav style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: flex-end;">
           
           ${!user ? `
             ${navLink('index.html', 'Главная')}
             ${navLink('news.html', 'Новости')}
             ${navLink('rating.html', 'Рейтинг')}
+            ${navLink('stub.html', 'Партнеры')}
+            ${navLink('stub.html', 'СМИ')}
+            ${navLink('stub.html', 'Отзывы')}
+            ${navLink('contacts.html', 'Контакты')}
+            ${navLink('stub.html', 'Правовая')}
           ` : ''}
 
           ${user ? `
@@ -52,10 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
             ${navLink('admin-users.html', 'Участники', 'color: #4CAF50;')}
           ` : ''}
 
+          ${user ? `
           <div class="dropdown" id="dropdown-menu">
             <a href="#" id="dropdown-btn" style="cursor: pointer;">Ещё ▾</a>
             <div class="dropdown-content">${dropdownContent}</div>
           </div>
+          ` : ''}
           
           ${user 
             ? `<a href="messages.html" class="icon-badge" title="Сообщения">✉<span class="badge" id="msg-badge">1</span></a>` 
