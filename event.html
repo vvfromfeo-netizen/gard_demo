@@ -12,13 +12,13 @@
     
     <div class="card" style="margin-top: 20px;" id="event-details"></div>
 
-    <div id="discussion-section" style="margin-top: 40px; display: none;">
+    <div id="discussion-section" style="margin-top: 40px;">
       <h3 style="margin-bottom: 20px;">Обсуждение события</h3>
       <div id="comments-container" style="margin-bottom: 20px;"></div>
       
       <div class="card" style="border-color: var(--accent);">
         <div class="form-group">
-          <textarea id="comment-text" class="form-control" rows="2" placeholder="Поделитесь впечатлениями..."></textarea>
+          <textarea id="comment-text" class="form-control" rows="2" placeholder="Задайте вопрос или поделитесь мыслями..."></textarea>
         </div>
         <button class="btn" onclick="addComment()">Отправить</button>
       </div>
@@ -47,20 +47,17 @@
         <h1 style="color: var(--accent); margin-bottom: 15px;">${event.title}</h1>
         <p style="font-size: 18px; margin-bottom: 10px;">${event.date} | ${event.place}</p>
         <p style="color: var(--text-muted); margin-bottom: 20px;">Формат: ${event.format}</p>
-        ${event.status === 'upcoming' 
-          ? `<button class="btn" style="width: 100%;" onclick="alert('Вы записаны на событие! (Демо)')">Записаться на мероприятие</button>` 
-          : `<div style="background: #222; padding: 15px; border-left: 4px solid var(--text-muted);">Это событие уже прошло. Ниже вы можете обсудить его с участниками.</div>`
-        }
+        <p style="color: ${event.status === 'past' ? '#777' : '#4CAF50'}; font-weight: bold;">
+          Статус: ${event.status === 'upcoming' ? 'Предстоит' : 'Завершено'}
+        </p>
       `;
-
-      if (event.status === 'past') {
-        document.getElementById('discussion-section').style.display = 'block';
-        renderComments();
-      }
+      renderComments();
     }
 
     function renderComments() {
       const comments = JSON.parse(localStorage.getItem(`gart_event_${currentEventId}`) || '[]');
+      const user = GART_AUTH.getCurrentUser();
+      const isAdmin = user && user.role === 'admin';
       const container = document.getElementById('comments-container');
       
       if (comments.length === 0) {
@@ -69,9 +66,12 @@
       }
 
       container.innerHTML = comments.map(c => `
-        <div class="card" style="padding: 15px; margin-bottom: 10px;">
-          <strong style="color: var(--accent);">${c.author}</strong>
-          <p style="margin-top: 5px;">${c.text}</p>
+        <div class="card" style="padding: 15px; margin-bottom: 10px; display:flex; justify-content:space-between;">
+          <div>
+            <strong style="color: var(--accent);">${c.author}</strong>
+            <p style="margin-top: 5px;">${c.text}</p>
+          </div>
+          ${isAdmin ? `<button onclick="deleteComment('${c.text}')" style="color:#F44336; background:none; border:none; cursor:pointer;">Удалить</button>` : ''}
         </div>
       `).join('');
     }
@@ -82,10 +82,17 @@
 
       const user = GART_AUTH.getCurrentUser();
       const comments = JSON.parse(localStorage.getItem(`gart_event_${currentEventId}`) || '[]');
-      comments.push({ author: user.name, text: text });
+      comments.push({ author: user.nickname, text: text });
       
       localStorage.setItem(`gart_event_${currentEventId}`, JSON.stringify(comments));
       document.getElementById('comment-text').value = '';
+      renderComments();
+    }
+
+    function deleteComment(text) {
+      let comments = JSON.parse(localStorage.getItem(`gart_event_${currentEventId}`));
+      comments = comments.filter(c => c.text !== text);
+      localStorage.setItem(`gart_event_${currentEventId}`, JSON.stringify(comments));
       renderComments();
     }
 
