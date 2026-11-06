@@ -1,22 +1,24 @@
-// Сброс старых тестовых данных для применения новых ников
-if (localStorage.getItem('gart_version') !== '2.0') {
+// Сброс старых данных для применения новой структуры
+if (localStorage.getItem('gart_version') !== '3.0') {
     localStorage.clear();
-    localStorage.setItem('gart_version', '2.0');
+    localStorage.setItem('gart_version', '3.0');
 }
 
 const GART_DATA = {
   users: [
-    { email: 'admin@demo', name: 'Евгений', nickname: 'Рагнар', role: 'admin' },
-    { email: 'user@demo', name: 'Владимир', nickname: 'Свенельд', role: 'member' },
-    { email: 'candidate@demo', name: 'Иван', nickname: 'Ярополк', role: 'candidate' }
+    { id: 1, email: 'admin@demo', firstName: 'Евгений', lastName: 'Смирнов', age: 38, nickname: 'Рагнар', role: 'admin' },
+    { id: 2, email: 'user@demo', firstName: 'Владимир', lastName: 'Петров', age: 42, nickname: 'Свенельд', role: 'member' },
+    { id: 3, email: 'candidate@demo', firstName: 'Иван', lastName: 'Сидоров', age: 29, nickname: 'Ярополк', role: 'candidate' }
   ],
   applications: [
-    { id: 1, name: 'Алексей Смирнов', nickname: 'Велес', email: 'alex@mail.ru', phone: '+7 999 123-45-67', region: 'Челябинск', source: 'Рекомендация', status: 'pending', date: '2026-11-01' },
-    { id: 2, name: 'Дмитрий Петров', nickname: 'Громобой', email: 'dim@mail.ru', phone: '+7 999 765-43-21', region: 'Екатеринбург', source: 'Блог Владимира', status: 'approved', date: '2026-10-28' }
+    { id: 1, firstName: 'Алексей', lastName: 'Смирнов', age: 34, nickname: 'Велес', email: 'alex@mail.ru', phone: '+7 999 123-45-67', source: 'Рекомендация', status: 'pending', date: '2026-11-01' }
   ],
   posts: [
     { id: 1, author: 'Свенельд', text: 'Всем привет! В субботу идем в баню. Кто со мной?', date: '2026-11-03', comments: [] },
     { id: 2, author: 'Велес', text: 'Спасибо за поддержку вчера, мужики. С машиной разобрался.', date: '2026-11-02', comments: [{ author: 'Рагнар', text: 'Всегда пожалуйста!' }] }
+  ],
+  news: [
+    { id: 1, title: 'Итоги осеннего похода', text: 'В минувшие выходные участники клуба совершили восхождение на Таганай. Делимся впечатлениями.', date: '2026-11-04', comments: [] }
   ],
   events: [
     { id: 1, title: 'Поход в горы', date: '2026-11-15', place: 'Таганай', format: 'Офлайн', status: 'upcoming' },
@@ -27,16 +29,14 @@ const GART_DATA = {
     { q: 'Неспособность остановить или контролировать беспокойство', options: ['Совсем нет', 'Несколько дней', 'Более половины дней', 'Почти каждый день'] },
     { q: 'Слишком сильное беспокойство по разным поводам', options: ['Совсем нет', 'Несколько дней', 'Более половины дней', 'Почти каждый день'] },
     { q: 'Трудности с расслаблением', options: ['Совсем нет', 'Несколько дней', 'Более половины дней', 'Почти каждый день'] }
-  ]
+  ],
+  // Стартовые темы для чатов
+  chatTopics: ['Знакомство', 'Челлендж', 'Вопросы и помощь', 'Разное']
 };
 
-// Инициализация localStorage
 localStorage.setItem('gart_applications', JSON.stringify(GART_DATA.applications));
 localStorage.setItem('gart_posts', JSON.stringify(GART_DATA.posts));
-
-// Инициализация рейтинга с новыми никами
-localStorage.setItem('gart_rating_new', JSON.stringify([
-  { id: 1, name: 'Велес', exercise: 'Отжимания', value: 50, date: '2026-11-04' },
-  { id: 2, name: 'Свенельд', exercise: 'Бег (км)', value: 10, date: '2026-11-03' },
-  { id: 3, name: 'Ярополк', exercise: 'Отжимания', value: 70, date: '2026-11-01' }
-]));
+localStorage.setItem('gart_news', JSON.stringify(GART_DATA.news));
+if (!localStorage.getItem('gart_chat_topics')) {
+    localStorage.setItem('gart_chat_topics', JSON.stringify(GART_DATA.chatTopics));
+}
