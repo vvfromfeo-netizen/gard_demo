@@ -11,10 +11,17 @@
     <h2>Интернет-магазин</h2>
     <p style="color: var(--text-muted); margin-bottom: 30px;">Символика, которая объединяет.</p>
 
-    <!-- Форма добавления товара (только для админа) -->
     <div class="card" id="admin-add-item" style="display: none; margin-bottom: 30px; border-color: var(--accent);">
       <h3>Добавить товар</h3>
-      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+      
+      <!-- Иконка добавления фото -->
+      <div style="border: 2px dashed #444; border-radius: 4px; padding: 30px; text-align: center; margin: 20px 0; cursor: pointer; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#777'" onmouseout="this.style.borderColor='#444'">
+        <div style="font-size: 32px; color: #666; margin-bottom: 10px;">📷</div>
+        <div style="color: #666; font-size: 14px;">Прикрепить фото товара</div>
+        <div style="color: #444; font-size: 12px; margin-top: 5px;">(Работает в боевой версии)</div>
+      </div>
+
+      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 15px;">
         <input type="text" id="item-title" class="form-control" placeholder="Название">
         <input type="number" id="item-price" class="form-control" placeholder="Цена (₽)">
       </div>
@@ -60,8 +67,7 @@
         showAuthRequiredModal();
         return;
       }
-      // Владимир — это user@demo (Владимир)
-      const targetNick = 'Владимир';
+      const targetNick = 'Свенельд';
       const text = `Здравствуйте, я заинтересовался покупкой: ${itemName}`;
       window.location.href = `messages.html?with=${targetNick}&text=${encodeURIComponent(text)}`;
     }
