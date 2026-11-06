@@ -37,11 +37,16 @@
   <script>
     function buyItem(itemName) {
       const user = GART_AUTH.getCurrentUser();
-      if (!user) return window.location.href = 'login.html';
+      
+      // Если гость — показываем модальное окно
+      if (!user) {
+        showAuthRequiredModal();
+        return;
+      }
 
-      // Находим админа
+      // Если авторизован — идем в сообщения к админу
       const admin = GART_DATA.users.find(u => u.role === 'admin');
-      const adminNick = admin ? admin.nickname : 'Admin';
+      const adminNick = admin ? admin.nickname : 'Рагнар';
 
       const text = `Здравствуйте, я заинтересовался покупкой: ${itemName}`;
       window.location.href = `messages.html?with=${adminNick}&text=${encodeURIComponent(text)}`;
