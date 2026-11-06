@@ -125,15 +125,16 @@
     }
 
     // 4. Запись на консультацию (с проверкой авторизации)
-    function handleConsultation() {
+        function handleConsultation() {
       const user = GART_AUTH.getCurrentUser();
       
       if (!user) {
-        // Если гость — вызываем модальное окно из layout.js
         showAuthRequiredModal();
       } else {
-        // Если вошел — демо-уведомление
-        alert('Запись на консультацию (Демо)\nНаш координатор свяжется с вами.');
+        // Владимир — это user@demo (Свенельд)
+        const targetNick = 'Свенельд';
+        const text = 'Здравствуйте, я прошел тест на тревожность и хотел бы записаться на консультацию.';
+        window.location.href = `messages.html?with=${targetNick}&text=${encodeURIComponent(text)}`;
       }
     }
 
