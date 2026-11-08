@@ -34,21 +34,14 @@
         <label>Email</label>
         <input type="email" id="user-email" class="form-control" readonly>
       </div>
-      <div class="form-group">
-        <label>Регион</label>
-        <input type="text" class="form-control" value="Челябинск" readonly>
-      </div>
       
       <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color);">
         <h4 style="margin-bottom: 15px; color: var(--accent);">Моя физическая активность</h4>
-        <ul id="my-activity-list" style="list-style: none; padding: 0; margin-bottom: 30px;">
-           <!-- Заполняется JS -->
-        </ul>
+        <ul id="my-activity-list" style="list-style: none; padding: 0; margin-bottom: 30px;"></ul>
 
         <h4 style="margin-bottom: 15px; color: var(--accent);">Посещенные мероприятия</h4>
-        <ul style="list-style: none; padding: 0;">
-           <li style="padding: 10px 0; border-bottom: 1px solid #222;">Поход в горы (15.10.2026) <span style="color: #4CAF50; float: right;">✓ Был</span></li>
-           <li style="padding: 10px 0; border-bottom: 1px solid #222;">Чайная церемония (20.09.2026) <span style="color: #4CAF50; float: right;">✓ Был</span></li>
+        <ul id="my-events-list" style="list-style: none; padding: 0;">
+           <!-- Заполняется JS -->
         </ul>
       </div>
     </div>
@@ -62,11 +55,11 @@
     document.addEventListener('DOMContentLoaded', () => {
       const user = GART_AUTH.getCurrentUser();
       if (user) {
-        const safeNickname = user.nickname || user.name || 'User';
+        const safeNickname = user.nickname || user.firstName || 'User';
         
         document.getElementById('user-name').innerText = safeNickname;
         document.getElementById('user-nickname').value = safeNickname;
-        document.getElementById('user-realname').value = user.name || safeNickname;
+        document.getElementById('user-realname').value = user.firstName ? `${user.firstName} ${user.lastName}` : user.name;
         document.getElementById('user-email').value = user.email;
         document.getElementById('user-initial').innerText = safeNickname.charAt(0).toUpperCase();
         
@@ -75,17 +68,41 @@
            document.getElementById('user-role').style.color = '#4CAF50';
         }
 
+        // 1. Активность
         const allActivity = JSON.parse(localStorage.getItem('gart_rating_new') || '[]');
         const myActivity = allActivity.filter(a => a.name === safeNickname).sort((a,b) => new Date(b.date) - new Date(a.date));
         
-        const list = document.getElementById('my-activity-list');
+        const actList = document.getElementById('my-activity-list');
         if (myActivity.length === 0) {
-          list.innerHTML = '<li style="color: var(--text-muted); font-size: 14px;">Вы еще не вносили результаты.</li>';
+          actList.innerHTML = '<li style="color: var(--text-muted); font-size: 14px;">Вы еще не вносили результаты.</li>';
         } else {
-          list.innerHTML = myActivity.map(a => `
+          actList.innerHTML = myActivity.map(a => `
             <li style="padding: 10px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between;">
               <span>${a.exercise}</span>
               <strong style="color: var(--accent);">${a.value} <span style="font-size: 12px; color: #777; font-weight: normal;">(${a.date})</span></strong>
+            </li>
+          `).join('');
+        }
+
+        // 2. Посещенные мероприятия
+        const attendance = JSON.parse(localStorage.getItem('gart_attendance') || '{}');
+        const eventList = document.getElementById('my-events-list');
+        let visitedEvents = [];
+
+        for (const eventId in attendance) {
+          if (attendance[eventId].includes(safeNickname)) {
+            const event = GART_DATA.events.find(e => e.id == eventId);
+            if (event) visitedEvents.push(event);
+          }
+        }
+
+        if (visitedEvents.length === 0) {
+          eventList.innerHTML = '<li style="color: var(--text-muted); font-size: 14px;">Пока нет посещенных мероприятий.</li>';
+        } else {
+          eventList.innerHTML = visitedEvents.map(e => `
+            <li style="padding: 10px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between;">
+              <span>${e.title} (${e.date})</span>
+              <span style="color: #4CAF50; font-weight: bold;">✓ Был</span>
             </li>
           `).join('');
         }
