@@ -132,8 +132,8 @@
         // Гость — отправляем на страницу контактов
         window.location.href = 'contacts.html';
       } else {
-        // Авторизован — в чат к Владимиру (Свенельд)
-        const targetNick = 'Свенельд';
+        // Авторизован — в чат к Владимиру
+        const targetNick = 'Владимир';
         const text = 'Здравствуйте, я прошел тест на тревожность и хотел бы записаться на консультацию.';
         window.location.href = `messages.html?with=${targetNick}&text=${encodeURIComponent(text)}`;
       }
