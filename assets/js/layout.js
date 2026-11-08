@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           ${user && user.role === 'admin' ? `
             ${navLink('admin-applications.html', 'Заявки', 'color: #4CAF50;')}
+            ${navLink('admin-events.html', 'Мероприятия', 'color: #4CAF50;')}
             ${navLink('admin-users.html', 'Участники', 'color: #4CAF50;')}
           ` : ''}
 
