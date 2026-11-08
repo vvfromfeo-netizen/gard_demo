@@ -103,17 +103,29 @@
           `;
         });
       } else {
+        // ЛОГИКА ДЛЯ ЛИЧНЫХ СООБЩЕНИЙ
         const users = GART_DATA.users.filter(u => u.email !== user.email);
-        const approved = JSON.parse(localStorage.getItem('gart_applications') || '[]').filter(a => a.status === 'approved');
-        const allUsers = [...users, ...approved];
+        const apps = JSON.parse(localStorage.getItem('gart_applications') || '[]');
+        const approved = apps.filter(a => a.status === 'approved');
+        const pending = apps.filter(a => a.status === 'pending');
+        
+        // Админ видит всех (approved + pending), остальные только approved
+        const appContacts = isAdmin ? [...pending, ...approved] : approved;
+        const allContacts = [...users, ...appContacts];
 
-        allUsers.forEach(u => {
+        // Убираем дубликаты по никнейму
+        const uniqueContacts = Array.from(new Map(allContacts.map(c => [c.nickname, c])).values());
+
+        uniqueContacts.forEach(u => {
           const nick = u.nickname;
+          if (!nick) return;
+          
           const chatId = `dm_${nick}`;
           const msgs = allMsgs[chatId] || [];
           const lastMsg = msgs[msgs.length - 1];
           
-          if (msgs.length > 0 || u.role === 'admin') {
+          // Показываем всех админу, остальным - только тех, с кем уже есть переписка
+          if (isAdmin || msgs.length > 0) {
             const lastText = lastMsg ? lastMsg.text.substring(0, 25) + '...' : 'Нет сообщений';
             const lastTime = lastMsg ? lastMsg.date : '';
 
