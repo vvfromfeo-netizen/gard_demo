@@ -25,6 +25,10 @@
         <input type="number" id="app-age" class="form-control" required>
       </div>
       <div class="form-group">
+        <label>Город *</label>
+        <input type="text" id="app-city" class="form-control" placeholder="Челябинск" required>
+      </div>
+      <div class="form-group">
         <label>Никнейм (будет виден другим) *</label>
         <input type="text" id="app-nickname" class="form-control" placeholder="Например: Свенельд" required>
       </div>
@@ -36,11 +40,33 @@
         <label>Телефон *</label>
         <input type="tel" id="app-phone" class="form-control" required>
       </div>
+      
+      <div class="form-group">
+        <label>Откуда вы узнали о клубе? *</label>
+        <select id="app-source" class="form-control" required onchange="toggleOtherSource()">
+          <option value="">-- Выберите --</option>
+          <option value="Блог или соцсети Владимира">1. Блог или соцсети Владимира</option>
+          <option value="Занимался у Владимира">2. Занимался у Владимира (массаж, ЛФК, психолог)</option>
+          <option value="Сообщество Чекпоинт">3. Сообщество «Чекпоинт»</option>
+          <option value="Телевидение или СМИ">4. Телевидение или СМИ</option>
+          <option value="Посоветовала родственница">5. Посоветовала жена, мама или другая родственница</option>
+          <option value="Посоветовал друг или участник">6. Посоветовал друг или участник клуба</option>
+          <option value="Мероприятие или выступление">7. Мероприятие или выступление</option>
+          <option value="Нашёл в интернете">8. Нашёл в интернете</option>
+          <option value="other">9. Другое (впишите)</option>
+        </select>
+      </div>
+      
+      <!-- Поле для "Другое" (скрыто по умолчанию) -->
+      <div class="form-group" id="other-source-group" style="display: none;">
+        <label>Укажите ваш вариант *</label>
+        <input type="text" id="app-source-other" class="form-control" placeholder="Напишите ваш вариант">
+      </div>
 
       <div class="form-group" style="display: flex; gap: 10px; align-items: flex-start; margin-top: 20px;">
         <input type="checkbox" id="app-consent" style="margin-top: 5px;">
         <label for="app-consent" style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
-          Я даю согласие на обработку персональных данных.
+          Я даю согласие на обработку персональных данных в соответствии с <a href="stub.html" target="_blank">Политикой конфиденциальности</a> и принимаю <a href="stub.html" target="_blank">Пользовательское соглашение</a>.
         </label>
       </div>
 
@@ -53,16 +79,33 @@
   <script src="assets/js/guard.js"></script>
   <script src="assets/js/layout.js"></script>
   <script>
+    function toggleOtherSource() {
+      const select = document.getElementById('app-source');
+      const otherGroup = document.getElementById('other-source-group');
+      if (select.value === 'other') {
+        otherGroup.style.display = 'block';
+      } else {
+        otherGroup.style.display = 'none';
+      }
+    }
+
     function submitApplication() {
       const firstName = document.getElementById('app-firstName').value;
       const lastName = document.getElementById('app-lastName').value;
       const age = document.getElementById('app-age').value;
+      const city = document.getElementById('app-city').value;
       const nickname = document.getElementById('app-nickname').value;
       const email = document.getElementById('app-email').value;
       const phone = document.getElementById('app-phone').value;
+      let source = document.getElementById('app-source').value;
       const consent = document.getElementById('app-consent').checked;
 
-      if (!firstName || !lastName || !age || !nickname || !email || !phone) {
+      if (source === 'other') {
+        source = document.getElementById('app-source-other').value;
+        if (!source) return alert('Пожалуйста, укажите свой вариант.');
+      }
+
+      if (!firstName || !lastName || !age || !city || !nickname || !email || !phone || !source) {
         return alert('Пожалуйста, заполните все поля.');
       }
       if (!consent) {
@@ -72,7 +115,7 @@
       const apps = JSON.parse(localStorage.getItem('gart_applications') || '[]');
       apps.push({
         id: Date.now(),
-        firstName, lastName, age, nickname, email, phone,
+        firstName, lastName, age, city, nickname, email, phone, source,
         status: 'pending',
         date: new Date().toLocaleDateString('ru-RU')
       });
