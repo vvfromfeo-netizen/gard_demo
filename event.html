@@ -37,7 +37,9 @@
       const id = parseInt(urlParams.get('id'));
       currentEventId = id;
       
-      const event = GART_DATA.events.find(e => e.id === id);
+      const events = JSON.parse(localStorage.getItem('gart_events') || 'null') || GART_DATA.events;
+      const event = events.find(e => e.id === id);
+
       if (!event) {
         document.getElementById('event-details').innerHTML = '<h2>Событие не найдено</h2>';
         return;
@@ -49,11 +51,11 @@
 
       document.getElementById('event-details').innerHTML = `
         <div style="display:flex; justify-content: space-between; align-items:flex-start; flex-wrap: wrap; gap: 10px;">
-          <h1 style="color: var(--accent); margin-bottom: 15px;">${event.title}</h1>
+          <h1 style="color: var(--accent); margin-bottom: 15px;">${escapeHtml(event.title)}</h1>
           ${statusBadge}
         </div>
-        <p style="font-size: 18px; margin-bottom: 10px;">${event.date} | ${event.place}</p>
-        <p style="color: var(--text-muted); margin-bottom: 20px;">Формат: ${event.format}</p>
+        <p style="font-size: 18px; margin-bottom: 10px;">${escapeHtml(event.date)} | ${escapeHtml(event.place)}</p>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">Формат: ${escapeHtml(event.format || 'Офлайн')}</p>
       `;
       renderComments();
     }
@@ -72,8 +74,8 @@
       container.innerHTML = comments.map((c, idx) => `
         <div class="card" style="padding: 15px; margin-bottom: 10px; display:flex; justify-content:space-between;">
           <div>
-            <a href="user-profile.html?nickname=${encodeURIComponent(c.author)}" style="color: var(--accent); font-weight: bold; text-decoration: underline;">${c.author}</a>
-            <p style="margin-top: 5px;">${c.text}</p>
+            <a href="user-profile.html?nickname=${encodeURIComponent(c.author)}" style="color: var(--accent); font-weight: bold; text-decoration: underline;">${escapeHtml(c.author)}</a>
+            <p style="margin-top: 5px;">${escapeHtml(c.text)}</p>
           </div>
           ${isAdmin ? `<button onclick="deleteComment(${idx})" style="color:#F44336; background:none; border:none; cursor:pointer;">Удалить</button>` : ''}
         </div>
@@ -93,7 +95,7 @@
 
     function deleteComment(idx) {
       if (!confirm('Удалить комментарий?')) return;
-      let comments = JSON.parse(localStorage.getItem(`gart_event_${currentEventId}`));
+      let comments = JSON.parse(localStorage.getItem(`gart_event_${currentEventId}`) || '[]');
       comments.splice(idx, 1);
       localStorage.setItem(`gart_event_${currentEventId}`, JSON.stringify(comments));
       renderComments();
