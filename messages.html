@@ -36,23 +36,42 @@
   <script src="assets/js/guard.js"></script>
   <script src="assets/js/layout.js"></script>
   <script>
-    let currentTab = 'general';
-    let currentChatId = null;
     const user = GART_AUTH.getCurrentUser();
     const isAdmin = user && user.role === 'admin';
+
+    let currentTab = 'general';
+    let currentChatId = null;
 
     const urlParams = new URLSearchParams(window.location.search);
     const startChatWith = urlParams.get('with');
     const prefillText = urlParams.get('text');
 
+    // In-memory кеш + синхронизация с localStorage
+    function loadMessages() {
+      const raw = localStorage.getItem('gart_messages');
+      let msgs;
+      if (!raw) {
+        msgs = JSON.parse(JSON.stringify(GART_DATA.initialMessages || {}));
+        localStorage.setItem('gart_messages', JSON.stringify(msgs));
+      } else {
+        try { msgs = JSON.parse(raw); }
+        catch (e) { msgs = {}; }
+        if (typeof msgs !== 'object' || Array.isArray(msgs)) msgs = {};
+      }
+      return msgs;
+    }
+
+    function saveMessages(msgs) {
+      localStorage.setItem('gart_messages', JSON.stringify(msgs));
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       if (startChatWith) {
-        currentTab = 'personal';
         switchTab('personal');
         setTimeout(() => {
-          openChat(`dm_${encodeURIComponent(startChatWith)}`);
+          openChat(`dm_${startChatWith}`);
           if (prefillText) document.getElementById('msg-input').value = prefillText;
-        }, 100);
+        }, 50);
       } else {
         switchTab('general');
       }
@@ -67,6 +86,7 @@
       document.getElementById('tab-personal').classList.remove('active');
       document.getElementById(`tab-${tab}`).classList.add('active');
       document.getElementById('admin-add-topic').style.display = (tab === 'general' && isAdmin) ? 'block' : 'none';
+      currentChatId = null;
       renderSidebar();
       document.getElementById('chat-header').innerText = 'Выберите чат';
       document.getElementById('chat-messages').innerHTML = '';
@@ -75,25 +95,27 @@
 
     function renderSidebar() {
       const container = document.getElementById('sidebar-content');
+      const allMsgs = loadMessages();
       container.innerHTML = '';
-      const allMsgs = JSON.parse(localStorage.getItem('gart_messages') || '{}');
+      let rendered = 0;
 
       if (currentTab === 'general') {
         const topics = JSON.parse(localStorage.getItem('gart_chat_topics') || '[]');
         topics.forEach((t, idx) => {
-          const msgs = allMsgs[`topic_${t}`] || [];
+          rendered++;
+          const chatId = `topic_${t}`;
+          const msgs = Array.isArray(allMsgs[chatId]) ? allMsgs[chatId] : [];
           const lastMsg = msgs[msgs.length - 1];
-          const lastText = lastMsg ? `${escapeHtml(lastMsg.author)}: ${escapeHtml(lastMsg.text.substring(0, 20))}...` : 'Нет сообщений';
+          const lastText = lastMsg ? `${escapeHtml(lastMsg.author)}: ${escapeHtml(String(lastMsg.text).substring(0, 20))}...` : 'Нет сообщений';
           const lastTime = lastMsg ? escapeHtml(lastMsg.date) : '';
-          const encoded = encodeURIComponent(t);
 
           container.innerHTML += `
-            <div class="chat-list-item" onclick="openChat('topic_${encoded}')" id="list-topic_${encoded}">
+            <div class="chat-list-item" data-chat-id="${escapeHtml(chatId)}" onclick="openChat(this.dataset.chatId, this)" id="chat-item-${idx}">
               <div style="min-width:0;">
                 <div style="color: #fff; font-weight: bold; margin-bottom: 5px;"># ${escapeHtml(t)}</div>
-                <div style="font-size: 12px; color: var(--text-muted); overflow:hidden; text-overflow:ellipsis;">${lastText}</div>
+                <div style="font-size: 12px; color: var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${lastText}</div>
               </div>
-              <div style="text-align: right; font-size: 12px; color: var(--text-muted);">
+              <div style="text-align: right; font-size: 12px; color: var(--text-muted); flex-shrink:0;">
                 <div>${lastTime}</div>
                 <div style="background: #333; padding: 2px 6px; border-radius: 10px; margin-top: 5px;">${msgs.length}</div>
                 ${isAdmin ? `<span onclick="event.stopPropagation(); deleteTopicAt(${idx})" style="color:#F44336; font-size:12px; cursor:pointer; display:block; margin-top:5px;">Удалить</span>` : ''}
@@ -110,67 +132,97 @@
         const allContacts = [...users, ...appContacts];
         const uniqueContacts = Array.from(new Map(allContacts.map(c => [c.nickname, c])).values());
 
+        let i = 0;
         uniqueContacts.forEach(u => {
           const nick = u.nickname;
           if (!nick) return;
           const chatId = `dm_${nick}`;
-          const msgs = allMsgs[chatId] || [];
+          const msgs = Array.isArray(allMsgs[chatId]) ? allMsgs[chatId] : [];
+          if (!isAdmin && msgs.length === 0) return;
+
+          rendered++;
           const lastMsg = msgs[msgs.length - 1];
+          const lastText = lastMsg ? escapeHtml(String(lastMsg.text).substring(0, 25)) + '...' : 'Нет сообщений';
+          const lastTime = lastMsg ? escapeHtml(lastMsg.date) : '';
 
-          if (isAdmin || msgs.length > 0) {
-            const lastText = lastMsg ? escapeHtml(lastMsg.text.substring(0, 25)) + '...' : 'Нет сообщений';
-            const lastTime = lastMsg ? escapeHtml(lastMsg.date) : '';
-            const encoded = encodeURIComponent(nick);
-
-            container.innerHTML += `
-              <div class="chat-list-item" onclick="openChat('dm_${encoded}')" id="list-dm_${encoded}">
-                <div style="min-width:0;">
-                  <div style="color: #fff; font-weight: bold; margin-bottom: 5px;">${escapeHtml(nick)}</div>
-                  <div style="font-size: 12px; color: var(--text-muted); overflow:hidden; text-overflow:ellipsis;">${lastText}</div>
-                </div>
-                <div style="font-size: 12px; color: var(--text-muted);">${lastTime}</div>
+          container.innerHTML += `
+            <div class="chat-list-item" data-chat-id="${escapeHtml(chatId)}" onclick="openChat(this.dataset.chatId, this)" id="chat-item-${i}">
+              <div style="min-width:0;">
+                <div style="color: #fff; font-weight: bold; margin-bottom: 5px;">${escapeHtml(nick)}</div>
+                <div style="font-size: 12px; color: var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${lastText}</div>
               </div>
-            `;
-          }
+              <div style="font-size: 12px; color: var(--text-muted); flex-shrink:0;">${lastTime}</div>
+            </div>
+          `;
+          i++;
         });
+      }
+
+      if (rendered === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">💬</div>
+            <div class="empty-state-title">Пока пусто</div>
+            <p style="font-size:13px;">Начните диалог — напишите первому</p>
+          </div>`;
       }
     }
 
-    function openChat(chatId) {
+    function openChat(chatId, el) {
+      if (!chatId) return;
       currentChatId = chatId;
-      document.querySelectorAll('.chat-list-item').forEach(el => el.classList.remove('active'));
-      const activeEl = document.getElementById(`list-${chatId}`);
-      if (activeEl) activeEl.classList.add('active');
+
+      document.querySelectorAll('.chat-list-item').forEach(n => n.classList.remove('active'));
+      if (el) el.classList.add('active');
 
       const headerEl = document.getElementById('chat-header');
       if (chatId.startsWith('dm_')) {
-        const nick = decodeURIComponent(chatId.replace('dm_', ''));
+        const nick = chatId.replace('dm_', '');
         headerEl.innerHTML = `Диалог с <a href="user-profile.html?nickname=${encodeURIComponent(nick)}" style="color: var(--accent); text-decoration: underline;">${escapeHtml(nick)}</a>`;
       } else {
-        const topicName = decodeURIComponent(chatId.replace('topic_', ''));
-        headerEl.innerText = `# ${topicName}`;
+        headerEl.innerText = `# ${chatId.replace('topic_', '')}`;
       }
+
       document.getElementById('chat-input-area').style.display = 'flex';
       renderMessages();
+      document.getElementById('msg-input').focus();
     }
 
     function renderMessages() {
-      const allMsgs = JSON.parse(localStorage.getItem('gart_messages') || '{}');
-      const chatMsgs = allMsgs[currentChatId] || [];
+      const allMsgs = loadMessages();
       const container = document.getElementById('chat-messages');
+      const chatMsgs = Array.isArray(allMsgs[currentChatId]) ? allMsgs[currentChatId] : [];
 
-      container.innerHTML = chatMsgs.map((m, index) => `
-        <div class="msg-bubble ${m.author === user.nickname ? 'msg-mine' : 'msg-other'}">
-          <div style="font-size: 11px; margin-bottom: 4px; font-weight: 600;">
-            ${m.author === user.nickname
-              ? `<span style="opacity: 0.7;">${escapeHtml(m.author)}</span>`
-              : `<a href="user-profile.html?nickname=${encodeURIComponent(m.author)}" style="color: inherit; text-decoration: underline; opacity: 0.85;">${escapeHtml(m.author)}</a>`}
+      if (chatMsgs.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="padding:40px 20px; margin:auto;">
+            <div class="empty-state-icon">✍️</div>
+            <div class="empty-state-title">Тишина</div>
+            <p style="font-size:13px;">Напишите первое сообщение</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = chatMsgs.map((m, index) => {
+        const isMine = m.author === user.nickname;
+        const wrapperClass = isMine ? 'mine' : 'other';
+        const bubbleClass = isMine ? 'msg-mine' : 'msg-other';
+        return `
+          <div class="msg-wrapper ${wrapperClass}">
+            <div class="msg-bubble ${bubbleClass}">
+              <div style="font-size: 11px; margin-bottom: 4px; font-weight: 600;">
+                ${isMine
+                  ? `<span style="opacity: 0.7;">${escapeHtml(m.author)}</span>`
+                  : `<a href="user-profile.html?nickname=${encodeURIComponent(m.author)}" style="color: inherit; text-decoration: underline; opacity: 0.85;">${escapeHtml(m.author)}</a>`}
+              </div>
+              <div>${escapeHtml(m.text)}</div>
+              <div style="font-size: 10px; text-align: right; margin-top: 6px; opacity: 0.65;">${escapeHtml(m.date)}</div>
+            </div>
+            ${isAdmin ? `<button class="msg-delete-btn" onclick="deleteMsg(${index})">Удалить</button>` : ''}
           </div>
-          ${escapeHtml(m.text)}
-          ${isAdmin ? `<button onclick="deleteMsg(${index})" style="background:none; border:none; color:red; font-size:14px; cursor:pointer; float:right; margin-left:10px;">&times;</button>` : ''}
-          <div style="font-size: 10px; text-align: right; margin-top: 6px; opacity: 0.6;">${escapeHtml(m.date)}</div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+
       container.scrollTop = container.scrollHeight;
     }
 
@@ -179,45 +231,58 @@
       const text = input.value.trim();
       if (!text || !currentChatId) return;
 
-      let allMsgs = JSON.parse(localStorage.getItem('gart_messages') || '{}');
-      if (!allMsgs[currentChatId]) allMsgs[currentChatId] = [];
+      const allMsgs = loadMessages();
+      if (!Array.isArray(allMsgs[currentChatId])) allMsgs[currentChatId] = [];
       allMsgs[currentChatId].push({
         author: user.nickname,
         text: text,
         date: new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'})
       });
+      saveMessages(allMsgs);
 
-      localStorage.setItem('gart_messages', JSON.stringify(allMsgs));
       input.value = '';
       renderMessages();
       renderSidebar();
+      // сохраняем подсветку активного чата после re-render
+      document.querySelectorAll('.chat-list-item').forEach(n => {
+        if (n.dataset.chatId === currentChatId) n.classList.add('active');
+      });
     }
 
     function addTopic() {
       const name = prompt('Введите название темы:');
       if (!name || !name.trim()) return;
-      let topics = JSON.parse(localStorage.getItem('gart_chat_topics') || '[]');
+      const topics = JSON.parse(localStorage.getItem('gart_chat_topics') || '[]');
       topics.push(name.trim());
       localStorage.setItem('gart_chat_topics', JSON.stringify(topics));
       renderSidebar();
+      showToast('Тема добавлена');
     }
 
     function deleteTopicAt(idx) {
       if (!confirm('Удалить тему?')) return;
-      let topics = JSON.parse(localStorage.getItem('gart_chat_topics') || '[]');
+      const topics = JSON.parse(localStorage.getItem('gart_chat_topics') || '[]');
       topics.splice(idx, 1);
       localStorage.setItem('gart_chat_topics', JSON.stringify(topics));
+      currentChatId = null;
       renderSidebar();
+      document.getElementById('chat-header').innerText = 'Выберите чат';
+      document.getElementById('chat-messages').innerHTML = '';
+      document.getElementById('chat-input-area').style.display = 'none';
+      showToast('Тема удалена', 'info');
     }
 
     function deleteMsg(index) {
       if (!confirm('Удалить сообщение?')) return;
-      let allMsgs = JSON.parse(localStorage.getItem('gart_messages') || '{}');
-      if (allMsgs[currentChatId]) {
+      const allMsgs = loadMessages();
+      if (Array.isArray(allMsgs[currentChatId])) {
         allMsgs[currentChatId].splice(index, 1);
-        localStorage.setItem('gart_messages', JSON.stringify(allMsgs));
+        saveMessages(allMsgs);
         renderMessages();
         renderSidebar();
+        document.querySelectorAll('.chat-list-item').forEach(n => {
+          if (n.dataset.chatId === currentChatId) n.classList.add('active');
+        });
       }
     }
   </script>
