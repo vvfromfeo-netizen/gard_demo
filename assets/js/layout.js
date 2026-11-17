@@ -27,9 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
     return `<a href="${href}" class="${isActive ? 'nav-active' : ''}" style="${style}">${text}</a>`;
   };
 
-  const adminPill = (href, text) => {
+  const adminLink = (href, text) => {
     const isActive = currentPath === href;
-    return `<a href="${href}" class="nav-pill${isActive ? ' active' : ''}">${text}</a>`;
+    return `<a href="${href}" class="nav-admin-link${isActive ? ' active' : ''}">${text}</a>`;
   };
 
   let dropdownContent = `
@@ -83,8 +83,10 @@ document.addEventListener('DOMContentLoaded', () => {
           ` : ''}
 
           ${user && user.role === 'admin' ? `
-            ${adminPill('admin-applications.html', 'Заявки')}
-            ${adminPill('admin-users.html', 'Участники')}
+            <div style="display: flex; gap: 8px; margin-left: 10px; padding-left: 15px; border-left: 1px solid var(--border-color);">
+              ${adminLink('admin-applications.html', 'Заявки')}
+              ${adminLink('admin-users.html', 'Участники')}
+            </div>
           ` : ''}
 
           ${user ? `
