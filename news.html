@@ -9,18 +9,15 @@
 <body>
   <main class="container" style="margin-top: 40px; max-width: 800px;">
     <h2>Новости клуба</h2>
-    
     <div id="news-container" style="margin-top: 30px;"></div>
 
     <div class="card" id="add-news-form" style="display: none; border-color: var(--accent); margin-top: 40px;">
       <h3>Добавить новость</h3>
-      
-      <div style="border: 2px dashed #444; border-radius: 4px; padding: 30px; text-align: center; margin: 20px 0; cursor: pointer; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#777'" onmouseout="this.style.borderColor='#444'">
+      <div style="border: 2px dashed #444; border-radius: 12px; padding: 30px; text-align: center; margin: 20px 0; cursor: pointer; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#777'" onmouseout="this.style.borderColor='#444'">
         <div style="font-size: 32px; color: #666; margin-bottom: 10px;">📷</div>
         <div style="color: #666; font-size: 14px;">Прикрепить фотографию</div>
         <div style="color: #444; font-size: 12px; margin-top: 5px;">(Работает в боевой версии)</div>
       </div>
-
       <div class="form-group"><input type="text" id="news-title" class="form-control" placeholder="Заголовок"></div>
       <div class="form-group"><textarea id="news-text" class="form-control" rows="3" placeholder="Текст новости"></textarea></div>
       <button class="btn" onclick="createNews()">Опубликовать</button>
@@ -32,7 +29,7 @@
   <script src="assets/js/guard.js"></script>
   <script src="assets/js/layout.js"></script>
   <script>
-    // Одноразовая миграция: чистим комментарии в уже сохранённых новостях
+    // Миграция: чистим комментарии в уже сохранённых новостях
     (function cleanNewsComments() {
       const news = JSON.parse(localStorage.getItem('gart_news') || '[]');
       let changed = false;
@@ -46,9 +43,7 @@
       const isAdmin = user && user.role === 'admin';
       const container = document.getElementById('news-container');
 
-      if (isAdmin) {
-        document.getElementById('add-news-form').style.display = 'block';
-      }
+      if (isAdmin) document.getElementById('add-news-form').style.display = 'block';
 
       container.innerHTML = [...newsList].reverse().map(item => `
         <div class="card" style="margin-bottom: 20px;">
@@ -66,7 +61,7 @@
       const title = document.getElementById('news-title').value.trim();
       const text = document.getElementById('news-text').value.trim();
       if (!title || !text) return alert('Заполните поля');
-      
+
       let news = JSON.parse(localStorage.getItem('gart_news') || '[]');
       news.push({ id: Date.now(), title, text, date: new Date().toLocaleDateString('ru-RU') });
       localStorage.setItem('gart_news', JSON.stringify(news));
