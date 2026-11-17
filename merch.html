@@ -14,7 +14,6 @@
     <div class="card" id="admin-add-item" style="display: none; margin-bottom: 30px; border-color: var(--accent);">
       <h3>Добавить товар</h3>
       
-      <!-- Иконка добавления фото -->
       <div style="border: 2px dashed #444; border-radius: 4px; padding: 30px; text-align: center; margin: 20px 0; cursor: pointer; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#777'" onmouseout="this.style.borderColor='#444'">
         <div style="font-size: 32px; color: #666; margin-bottom: 10px;">📷</div>
         <div style="color: #666; font-size: 14px;">Прикрепить фото товара</div>
@@ -54,31 +53,34 @@
             Фото
             ${isAdmin ? `<button onclick="deleteItem(${item.id})" style="position: absolute; top: 10px; right: 10px; background: #F44336; color: #fff; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">Удалить</button>` : ''}
           </div>
-          <h3>${item.title}</h3>
-          <p style="color: var(--accent); font-weight: bold; margin: 10px 0;">${item.price} ₽</p>
-          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">${item.desc}</p>
-          <button class="btn" style="width: 100%;" onclick="buyItem('${item.title}')">Купить</button>
+          <h3>${escapeHtml(item.title)}</h3>
+          <p style="color: var(--accent); font-weight: bold; margin: 10px 0;">${escapeHtml(item.price)} ₽</p>
+          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">${escapeHtml(item.desc)}</p>
+          <button class="btn" style="width: 100%;" onclick="buyItem(${item.id})">Купить</button>
         </div>
       `).join('');
     }
 
-    function buyItem(itemName) {
+    function buyItem(itemId) {
       if (!user) {
         showAuthRequiredModal();
         return;
       }
+      const items = JSON.parse(localStorage.getItem('gart_shop') || '[]');
+      const item = items.find(i => i.id === itemId);
+      if (!item) return;
       const targetNick = 'Владимир';
-      const text = `Здравствуйте, я заинтересовался покупкой: ${itemName}`;
+      const text = `Здравствуйте, я заинтересовался покупкой: ${item.title}`;
       window.location.href = `messages.html?with=${targetNick}&text=${encodeURIComponent(text)}`;
     }
 
     function addItem() {
-      const title = document.getElementById('item-title').value;
+      const title = document.getElementById('item-title').value.trim();
       const price = document.getElementById('item-price').value;
-      const desc = document.getElementById('item-desc').value;
+      const desc = document.getElementById('item-desc').value.trim();
       if (!title || !price) return alert('Заполните поля');
 
-      let items = JSON.parse(localStorage.getItem('gart_shop'));
+      let items = JSON.parse(localStorage.getItem('gart_shop') || '[]');
       items.push({ id: Date.now(), title, price: parseInt(price), desc });
       localStorage.setItem('gart_shop', JSON.stringify(items));
       
@@ -90,7 +92,7 @@
 
     function deleteItem(id) {
       if (!confirm('Удалить товар?')) return;
-      let items = JSON.parse(localStorage.getItem('gart_shop'));
+      let items = JSON.parse(localStorage.getItem('gart_shop') || '[]');
       items = items.filter(i => i.id !== id);
       localStorage.setItem('gart_shop', JSON.stringify(items));
       renderShop();
