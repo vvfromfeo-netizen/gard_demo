@@ -7,7 +7,6 @@ if (localStorage.getItem('gart_version') !== '6.0') {
 const GART_DATA = {
   users: [
     { id: 1, email: 'admin@demo', firstName: 'Евгений', lastName: 'Смирнов', age: 38, nickname: 'Рагнар', role: 'admin' },
-    // Изменили ник на Владимир
     { id: 2, email: 'user@demo', firstName: 'Владимир', lastName: 'Петров', age: 42, nickname: 'Владимир', role: 'member' },
     { id: 3, email: 'candidate@demo', firstName: 'Иван', lastName: 'Сидоров', age: 29, nickname: 'Ярополк', role: 'candidate' }
   ],
@@ -18,7 +17,7 @@ const GART_DATA = {
     { id: 1, author: 'Владимир', text: 'Всем привет! В субботу идем в баню. Кто со мной?', date: '2026-11-03', comments: [] }
   ],
   news: [
-    { id: 1, title: 'Итоги осеннего похода', text: 'В минувшие выходные участники клуба совершили восхождение на Таганай. Делимся впечатлениями.', date: '2026-11-04', comments: [] }
+    { id: 1, title: 'Итоги осеннего похода', text: 'В минувшие выходные участники клуба совершили восхождение на Таганай. Делимся впечатлениями.', date: '2026-11-04' }
   ],
   events: [
     { id: 1, title: 'Поход в горы', date: '2026-11-15', place: 'Таганай', format: 'Офлайн', status: 'upcoming' },
@@ -51,7 +50,7 @@ const GART_DATA = {
   ]
 };
 
-// ИСПРАВЛЕНИЕ БАГА: Записываем данные, ТОЛЬКО если их еще нет в localStorage
+// Записываем данные, ТОЛЬКО если их еще нет в localStorage
 if (!localStorage.getItem('gart_applications')) localStorage.setItem('gart_applications', JSON.stringify(GART_DATA.applications));
 if (!localStorage.getItem('gart_posts')) localStorage.setItem('gart_posts', JSON.stringify(GART_DATA.posts));
 if (!localStorage.getItem('gart_news')) localStorage.setItem('gart_news', JSON.stringify(GART_DATA.news));
