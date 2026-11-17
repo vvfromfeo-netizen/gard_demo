@@ -4,7 +4,7 @@ window.escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;
 document.addEventListener('DOMContentLoaded', () => {
   const user = GART_AUTH.getCurrentUser();
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-  
+
   const navLink = (href, text, style = '') => {
     const isActive = currentPath === href || (href.includes('#') && currentPath === href.split('#')[0]);
     return `<a href="${href}" class="${isActive ? 'nav-active' : ''}" style="${style}">${text}</a>`;
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <a href="index.html#about">О проекте</a>
     <a href="stub.html">Правовая информация</a>
   `;
-  
+
   if (user) {
     dropdownContent = `
       <a href="index.html#about">О проекте</a>
@@ -34,9 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <header>
       <div class="container header-inner">
         <a href="index.html" class="logo">ГАРТ<span>.</span></a>
-        
         <nav style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: flex-end;">
-          
           ${!user ? `
             ${navLink('index.html', 'Главная')}
             ${navLink('news.html', 'Новости')}
@@ -73,19 +71,15 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="dropdown-content">${dropdownContent}</div>
           </div>
           ` : ''}
-          
-          ${user 
-            ? `<a href="messages.html" class="icon-badge" title="Сообщения">✉<span class="badge" id="msg-badge">1</span></a>` 
-            : ''}
 
-          ${user 
-            ? `<a href="profile.html" class="user-avatar" title="Личный кабинет">${safeNickname.charAt(0).toUpperCase()}</a>` 
-            : navLink('login.html', 'Войти')}
+          ${user ? `<a href="messages.html" class="icon-badge" title="Сообщения">✉<span class="badge" id="msg-badge">1</span></a>` : ''}
+
+          ${user ? `<a href="profile.html" class="user-avatar" title="Личный кабинет">${safeNickname.charAt(0).toUpperCase()}</a>` : navLink('login.html', 'Войти')}
         </nav>
       </div>
     </header>
   `;
-  
+
   const footerHTML = `
     <footer>
       <div class="container">
@@ -121,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.body.insertAdjacentHTML('afterbegin', headerHTML);
   document.body.insertAdjacentHTML('beforeend', modalHTML);
   document.body.insertAdjacentHTML('beforeend', footerHTML);
-  
+
   if (!window.location.search.includes('clean=1')) {
     document.body.insertAdjacentHTML('beforeend', devPanelHTML);
     document.body.style.paddingBottom = '60px';
