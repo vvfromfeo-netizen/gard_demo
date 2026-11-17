@@ -82,38 +82,34 @@
 
       if (currentTab === 'general') {
         const topics = JSON.parse(localStorage.getItem('gart_chat_topics') || '[]');
-        topics.forEach(t => {
+        topics.forEach((t, idx) => {
           const msgs = allMsgs[`topic_${t}`] || [];
           const lastMsg = msgs[msgs.length - 1];
-          const lastText = lastMsg ? `${lastMsg.author}: ${lastMsg.text.substring(0, 20)}...` : 'Нет сообщений';
-          const lastTime = lastMsg ? lastMsg.date : '';
+          const lastText = lastMsg ? `${escapeHtml(lastMsg.author)}: ${escapeHtml(lastMsg.text.substring(0, 20))}...` : 'Нет сообщений';
+          const lastTime = lastMsg ? escapeHtml(lastMsg.date) : '';
 
           container.innerHTML += `
-            <div class="chat-list-item" onclick="openChat('topic_${t}')" id="list-topic_${t}">
+            <div class="chat-list-item" onclick="openChat('topic_${encodeURIComponent(t)}')" id="list-topic_${escapeHtml(t)}">
               <div>
-                <div style="color: #fff; font-weight: bold; margin-bottom: 5px;"># ${t}</div>
+                <div style="color: #fff; font-weight: bold; margin-bottom: 5px;"># ${escapeHtml(t)}</div>
                 <div style="font-size: 12px; color: var(--text-muted);">${lastText}</div>
               </div>
               <div style="text-align: right; font-size: 12px; color: var(--text-muted);">
                 <div>${lastTime}</div>
                 <div style="background: #333; padding: 2px 6px; border-radius: 10px; margin-top: 5px;">${msgs.length}</div>
-                ${isAdmin ? `<span onclick="event.stopPropagation(); deleteTopic('${t}')" style="color:#F44336; font-size:12px; cursor:pointer; display:block; margin-top:5px;">Удалить</span>` : ''}
+                ${isAdmin ? `<span onclick="event.stopPropagation(); deleteTopicAt(${idx})" style="color:#F44336; font-size:12px; cursor:pointer; display:block; margin-top:5px;">Удалить</span>` : ''}
               </div>
             </div>
           `;
         });
       } else {
-        // ЛОГИКА ДЛЯ ЛИЧНЫХ СООБЩЕНИЙ
         const users = GART_DATA.users.filter(u => u.email !== user.email);
         const apps = JSON.parse(localStorage.getItem('gart_applications') || '[]');
         const approved = apps.filter(a => a.status === 'approved');
         const pending = apps.filter(a => a.status === 'pending');
         
-        // Админ видит всех (approved + pending), остальные только approved
         const appContacts = isAdmin ? [...pending, ...approved] : approved;
         const allContacts = [...users, ...appContacts];
-
-        // Убираем дубликаты по никнейму
         const uniqueContacts = Array.from(new Map(allContacts.map(c => [c.nickname, c])).values());
 
         uniqueContacts.forEach(u => {
@@ -124,15 +120,14 @@
           const msgs = allMsgs[chatId] || [];
           const lastMsg = msgs[msgs.length - 1];
           
-          // Показываем всех админу, остальным - только тех, с кем уже есть переписка
           if (isAdmin || msgs.length > 0) {
-            const lastText = lastMsg ? lastMsg.text.substring(0, 25) + '...' : 'Нет сообщений';
-            const lastTime = lastMsg ? lastMsg.date : '';
+            const lastText = lastMsg ? escapeHtml(lastMsg.text.substring(0, 25)) + '...' : 'Нет сообщений';
+            const lastTime = lastMsg ? escapeHtml(lastMsg.date) : '';
 
             container.innerHTML += `
-              <div class="chat-list-item" onclick="openChat('${chatId}')" id="list-${chatId}">
+              <div class="chat-list-item" onclick="openChat('dm_${encodeURIComponent(nick)}')" id="list-dm_${escapeHtml(nick)}">
                 <div>
-                  <div style="color: #fff; font-weight: bold; margin-bottom: 5px;">${nick}</div>
+                  <div style="color: #fff; font-weight: bold; margin-bottom: 5px;">${escapeHtml(nick)}</div>
                   <div style="font-size: 12px; color: var(--text-muted);">${lastText}</div>
                 </div>
                 <div style="font-size: 12px; color: var(--text-muted);">${lastTime}</div>
@@ -151,10 +146,11 @@
 
       const headerEl = document.getElementById('chat-header');
       if (chatId.startsWith('dm_')) {
-        const nick = chatId.replace('dm_', '');
-        headerEl.innerHTML = `Диалог с <a href="user-profile.html?nickname=${encodeURIComponent(nick)}" style="color: var(--accent); text-decoration: underline;">${nick}</a>`;
+        const nick = decodeURIComponent(chatId.replace('dm_', ''));
+        headerEl.innerHTML = `Диалог с <a href="user-profile.html?nickname=${encodeURIComponent(nick)}" style="color: var(--accent); text-decoration: underline;">${escapeHtml(nick)}</a>`;
       } else {
-        headerEl.innerText = chatId.replace('topic_', '# ');
+        const topicName = decodeURIComponent(chatId.replace('topic_', ''));
+        headerEl.innerText = `# ${topicName}`;
       }
       
       document.getElementById('chat-input-area').style.display = 'flex';
@@ -170,12 +166,12 @@
         <div class="msg-bubble ${m.author === user.nickname ? 'msg-mine' : 'msg-other'}">
           <div style="font-size: 10px; margin-bottom: 3px;">
             ${m.author === user.nickname 
-              ? `<span style="opacity: 0.7;">${m.author}</span>` 
-              : `<a href="user-profile.html?nickname=${encodeURIComponent(m.author)}" style="color: inherit; text-decoration: underline; opacity: 0.8;">${m.author}</a>`}
+              ? `<span style="opacity: 0.7;">${escapeHtml(m.author)}</span>` 
+              : `<a href="user-profile.html?nickname=${encodeURIComponent(m.author)}" style="color: inherit; text-decoration: underline; opacity: 0.8;">${escapeHtml(m.author)}</a>`}
           </div>
-          ${m.text}
+          ${escapeHtml(m.text)}
           ${isAdmin ? `<button onclick="deleteMsg(${index})" style="background:none; border:none; color:red; font-size:12px; cursor:pointer; float:right; margin-left:10px;">&times;</button>` : ''}
-          <div style="font-size: 10px; text-align: right; margin-top: 5px; opacity: 0.5;">${m.date}</div>
+          <div style="font-size: 10px; text-align: right; margin-top: 5px; opacity: 0.5;">${escapeHtml(m.date)}</div>
         </div>
       `).join('');
       container.scrollTop = container.scrollHeight;
@@ -203,17 +199,17 @@
 
     function addTopic() {
       const name = prompt('Введите название темы:');
-      if (!name) return;
-      let topics = JSON.parse(localStorage.getItem('gart_chat_topics'));
-      topics.push(name);
+      if (!name || !name.trim()) return;
+      let topics = JSON.parse(localStorage.getItem('gart_chat_topics') || '[]');
+      topics.push(name.trim());
       localStorage.setItem('gart_chat_topics', JSON.stringify(topics));
       renderSidebar();
     }
 
-    function deleteTopic(name) {
+    function deleteTopicAt(idx) {
       if (!confirm('Удалить тему?')) return;
-      let topics = JSON.parse(localStorage.getItem('gart_chat_topics'));
-      topics = topics.filter(t => t !== name);
+      let topics = JSON.parse(localStorage.getItem('gart_chat_topics') || '[]');
+      topics.splice(idx, 1);
       localStorage.setItem('gart_chat_topics', JSON.stringify(topics));
       renderSidebar();
     }
