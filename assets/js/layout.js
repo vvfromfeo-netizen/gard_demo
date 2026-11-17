@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const adminLink = (href, text) => {
     const isActive = currentPath === href;
-    return `<a href="${href}" class="nav-admin-link${isActive ? ' active' : ''}">${text}</a>`;
+    return `<a href="${href}" class="nav-admin-link${isActive ? ' nav-active' : ''}">${text}</a>`;
   };
 
   let dropdownContent = `
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <header>
       <div class="container header-inner">
         <a href="index.html" class="logo">ГАРТ<span>.</span></a>
-        <nav style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: flex-end;">
+        <nav style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: flex-end;">
           ${!user ? `
             ${navLink('index.html', 'Главная')}
             ${navLink('news.html', 'Новости')}
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ` : ''}
 
           ${user && user.role === 'admin' ? `
-            <div style="display: flex; gap: 8px; margin-left: 10px; padding-left: 15px; border-left: 1px solid var(--border-color);">
+            <div class="admin-group">
               ${adminLink('admin-applications.html', 'Заявки')}
               ${adminLink('admin-users.html', 'Участники')}
             </div>
@@ -145,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.paddingBottom = '60px';
   }
 
+  // Click-обработчик для мобильных (и на десктопе тоже работает)
   const dropdownBtn = document.getElementById('dropdown-btn');
   const dropdownMenu = document.getElementById('dropdown-menu');
   if (dropdownBtn && dropdownMenu) {
