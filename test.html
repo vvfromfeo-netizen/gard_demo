@@ -23,14 +23,14 @@
       <h1 id="result-score" style="font-size: 48px; margin-bottom: 10px;">0</h1>
       <p id="result-text" style="font-size: 18px; margin-bottom: 30px;"></p>
       
-      <div style="background: #222; padding: 15px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; text-align: left;">
+      <div style="background: #222; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; text-align: left;">
         <p><strong>Важно:</strong> Это не диагноз. Тест лишь помогает понять ваше текущее состояние. Если вы чувствуете, что вам тяжело, мы рекомендуем обратиться к специалисту.</p>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 10px;">
-        <button class="btn" style="background: #4CAF50; color: #fff;" onclick="saveResult()">Сохранить результат</button>
+        <button class="btn btn-outline" onclick="saveResult()">Сохранить результат</button>
         <button class="btn" onclick="handleConsultation()">Записаться на консультацию</button>
-        <a href="apply.html" class="btn btn-outline" style="display: block; text-align: center;">Подать заявку в клуб</a>
+        <a href="apply.html" id="apply-btn" class="btn btn-outline" style="display: block; text-align: center;">Подать заявку в клуб</a>
       </div>
     </div>
   </main>
@@ -82,7 +82,6 @@
 
       let text = '';
       let level = '';
-      // Интерпретация для 4 вопросов (макс. балл 12)
       if (totalScore <= 3) {
         text = 'Минимальный уровень тревожности. Вы справляетесь с ситуацией.';
         level = 'low';
@@ -94,12 +93,10 @@
         level = 'high';
       }
 
-      // Сохраняем обезличенную статистику (вместо отправки на сервер)
       let stats = JSON.parse(localStorage.getItem('gart_test_stats') || '{"low":0,"medium":0,"high":0}');
       stats[level]++;
       localStorage.setItem('gart_test_stats', JSON.stringify(stats));
 
-      // Переключаем экраны
       document.getElementById('test-container').style.display = 'none';
       document.getElementById('result-container').style.display = 'block';
       document.getElementById('result-score').innerText = totalScore;
@@ -124,15 +121,12 @@
       URL.revokeObjectURL(url);
     }
 
-    // 4. Запись на консультацию (с проверкой авторизации)
-            function handleConsultation() {
+    // 4. Запись на консультацию
+    function handleConsultation() {
       const user = GART_AUTH.getCurrentUser();
-      
       if (!user) {
-        // Гость — отправляем на страницу контактов
         window.location.href = 'contacts.html';
       } else {
-        // Авторизован — в чат к Владимиру
         const targetNick = 'Владимир';
         const text = 'Здравствуйте, я прошел тест на тревожность и хотел бы записаться на консультацию.';
         window.location.href = `messages.html?with=${targetNick}&text=${encodeURIComponent(text)}`;
@@ -140,7 +134,16 @@
     }
 
     // Запуск при загрузке страницы
-    document.addEventListener('DOMContentLoaded', renderQuestions);
+    document.addEventListener('DOMContentLoaded', () => {
+      renderQuestions();
+      
+      // СКРЫВАЕМ КНОПКУ "ПОДАТЬ ЗАЯВКУ", ЕСЛИ ПОЛЬЗОВАТЕЛЬ АВТОРИЗОВАН
+      const user = GART_AUTH.getCurrentUser();
+      if (user) {
+        const applyBtn = document.getElementById('apply-btn');
+        if (applyBtn) applyBtn.style.display = 'none';
+      }
+    });
   </script>
 </body>
 </html>
