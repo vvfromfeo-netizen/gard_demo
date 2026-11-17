@@ -11,6 +11,20 @@
     <h2>Афиша мероприятий</h2>
     <p style="color: var(--text-muted); margin-bottom: 30px;">Здесь вы можете узнать, куда и когда мы идем.</p>
 
+    <div id="admin-create-block" class="card" style="display:none; border-color: var(--accent); margin-bottom: 40px;">
+      <h3>Добавить событие</h3>
+      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+        <input type="text" id="ev-title" class="form-control" placeholder="Название">
+        <input type="date" id="ev-date" class="form-control">
+        <input type="text" id="ev-place" class="form-control" placeholder="Место">
+        <select id="ev-status" class="form-control">
+          <option value="upcoming">Предстоящее</option>
+          <option value="past">Прошедшее</option>
+        </select>
+      </div>
+      <button class="btn" style="margin-top: 15px;" onclick="addEvent()">Создать</button>
+    </div>
+
     <h3 style="margin-bottom: 20px; color: var(--accent);">Предстоящие события</h3>
     <div class="grid" id="upcoming-events"></div>
 
@@ -18,35 +32,135 @@
     <div class="grid" id="past-events"></div>
   </main>
 
+  <div class="modal-overlay" id="attendance-modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <button class="modal-close" onclick="closeAttendanceModal()">&times;</button>
+      <h3 class="modal-title">Отметить явку</h3>
+      <p id="attendance-event-title" style="color: var(--accent); margin-bottom: 15px;"></p>
+      <div id="attendance-users-list" style="max-height: 300px; overflow-y: auto; text-align: left; margin-bottom: 20px;"></div>
+      <button class="btn" style="width: 100%;" onclick="saveAttendance()">Сохранить</button>
+    </div>
+  </div>
+
   <script src="assets/js/data.js"></script>
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/guard.js"></script>
   <script src="assets/js/layout.js"></script>
   <script>
+    let currentEventId = null;
+
+    function getEvents() {
+      const stored = JSON.parse(localStorage.getItem('gart_events') || 'null');
+      if (stored) return stored;
+      localStorage.setItem('gart_events', JSON.stringify(GART_DATA.events));
+      return GART_DATA.events;
+    }
+
+    function saveEvents(events) {
+      localStorage.setItem('gart_events', JSON.stringify(events));
+    }
+
     function renderEvents() {
-      const events = GART_DATA.events;
+      const events = getEvents();
+      const user = GART_AUTH.getCurrentUser();
+      const isAdmin = user && user.role === 'admin';
+      document.getElementById('admin-create-block').style.display = isAdmin ? 'block' : 'none';
+
       const upcoming = events.filter(e => e.status === 'upcoming');
       const past = events.filter(e => e.status === 'past');
 
-      const createCard = (e) => `
-        <div class="card" style="${e.status === 'past' ? 'opacity: 0.75;' : ''}">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-            <h4 style="color: #fff;">${e.title}</h4>
-            <span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: ${e.status === 'past' ? '#444' : 'var(--accent)'}; color: ${e.status === 'past' ? '#aaa' : '#000'};">
-              ${e.status === 'past' ? 'Завершено' : 'Скоро'}
-            </span>
+      const createCard = (e) => {
+        const adminControls = isAdmin ? `
+          <div style="display:flex; gap:10px; margin-top:15px; flex-wrap:wrap;">
+            <button class="btn btn-outline" style="flex:1;" onclick="openAttendanceModal(${e.id})">Явка</button>
+            <button class="btn" style="background:#F44336; color:#fff; flex:1;" onclick="deleteEvent(${e.id})">Удалить</button>
+          </div>` : '';
+
+        return `
+          <div class="card" style="${e.status === 'past' ? 'opacity: 0.75;' : ''}">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+              <h4 style="color: #fff;">${escapeHtml(e.title)}</h4>
+              <span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: ${e.status === 'past' ? '#444' : 'var(--accent)'}; color: ${e.status === 'past' ? '#aaa' : '#000'};">
+                ${e.status === 'past' ? 'Завершено' : 'Скоро'}
+              </span>
+            </div>
+            <p style="color: var(--accent); font-weight: bold; margin-bottom: 10px;">${escapeHtml(e.date)}</p>
+            <p style="color: var(--text-muted); margin-bottom: 5px;">Место: ${escapeHtml(e.place)}</p>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Формат: ${escapeHtml(e.format || 'Офлайн')}</p>
+            <a href="event.html?id=${e.id}" class="btn btn-outline" style="width: 100%; text-align: center; display: block;">Подробнее</a>
+            ${adminControls}
           </div>
-          <p style="color: var(--accent); font-weight: bold; margin-bottom: 10px;">${e.date}</p>
-          <p style="color: var(--text-muted); margin-bottom: 5px;">Место: ${e.place}</p>
-          <p style="color: var(--text-muted); margin-bottom: 20px;">Формат: ${e.format}</p>
-          <a href="event.html?id=${e.id}" class="btn btn-outline" style="width: 100%; text-align: center; display: block;">
-            Подробнее
-          </a>
-        </div>
-      `;
+        `;
+      };
 
       document.getElementById('upcoming-events').innerHTML = upcoming.length ? upcoming.map(createCard).join('') : '<p>Пока нет предстоящих событий.</p>';
       document.getElementById('past-events').innerHTML = past.length ? past.map(createCard).join('') : '<p>Пока нет прошедших событий.</p>';
+    }
+
+    function addEvent() {
+      const title = document.getElementById('ev-title').value.trim();
+      const date = document.getElementById('ev-date').value;
+      const place = document.getElementById('ev-place').value.trim();
+      const status = document.getElementById('ev-status').value;
+      if (!title || !date || !place) return alert('Заполните поля');
+
+      const events = getEvents();
+      events.push({ id: Date.now(), title, date, place, status, format: 'Офлайн' });
+      saveEvents(events);
+
+      document.getElementById('ev-title').value = '';
+      document.getElementById('ev-date').value = '';
+      document.getElementById('ev-place').value = '';
+      renderEvents();
+    }
+
+    function deleteEvent(id) {
+      if (!confirm('Удалить событие?')) return;
+      saveEvents(getEvents().filter(e => e.id !== id));
+
+      const attendance = JSON.parse(localStorage.getItem('gart_attendance') || '{}');
+      delete attendance[id];
+      localStorage.setItem('gart_attendance', JSON.stringify(attendance));
+      localStorage.removeItem(`gart_event_${id}`);
+
+      renderEvents();
+    }
+
+    function openAttendanceModal(eventId) {
+      currentEventId = eventId;
+      const event = getEvents().find(e => e.id === eventId);
+      document.getElementById('attendance-event-title').innerText = event ? event.title : 'Событие';
+
+      const allUsers = GART_DATA.users.filter(u => u.role !== 'admin');
+      const approved = JSON.parse(localStorage.getItem('gart_applications') || '[]').filter(a => a.status === 'approved');
+      const members = [...allUsers, ...approved].filter(u => u.nickname);
+
+      const attendance = JSON.parse(localStorage.getItem('gart_attendance') || '{}');
+      const attendedList = attendance[eventId] || [];
+
+      document.getElementById('attendance-users-list').innerHTML = members.map(u => `
+        <label style="display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #222; cursor: pointer;">
+          <input type="checkbox" value="${escapeHtml(u.nickname)}" ${attendedList.includes(u.nickname) ? 'checked' : ''} style="width: 18px; height: 18px;">
+          <span style="color: #fff;">${escapeHtml(u.nickname)}</span>
+          <span style="color: var(--text-muted); font-size: 12px;">(${escapeHtml(u.firstName || u.name || 'Участник')})</span>
+        </label>
+      `).join('');
+
+      document.getElementById('attendance-modal').style.display = 'flex';
+    }
+
+    function closeAttendanceModal() {
+      document.getElementById('attendance-modal').style.display = 'none';
+    }
+
+    function saveAttendance() {
+      const checkboxes = document.querySelectorAll('#attendance-users-list input[type="checkbox"]:checked');
+      const attendedList = Array.from(checkboxes).map(cb => cb.value);
+      const attendance = JSON.parse(localStorage.getItem('gart_attendance') || '{}');
+      attendance[currentEventId] = attendedList;
+      localStorage.setItem('gart_attendance', JSON.stringify(attendance));
+      closeAttendanceModal();
+      alert('Явка сохранена!');
     }
 
     document.addEventListener('DOMContentLoaded', renderEvents);
