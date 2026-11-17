@@ -11,21 +11,6 @@
     <h2 style="margin-bottom: 30px;">Входящие заявки (На рассмотрении)</h2>
     
     <div id="applications-list" class="grid"></div>
-
-    <h2 style="margin-top: 60px; margin-bottom: 20px; color: #4CAF50;">Последние донаты</h2>
-    <div class="card">
-      <table style="width: 100%; text-align: left; border-collapse: collapse;">
-        <thead>
-          <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
-            <th style="padding: 10px 0;">Имя</th>
-            <th style="padding: 10px 0;">Сумма</th>
-            <th style="padding: 10px 0;">Email</th>
-            <th style="padding: 10px 0;">Дата</th>
-          </tr>
-        </thead>
-        <tbody id="donations-list"></tbody>
-      </table>
-    </div>
   </main>
 
   <script src="assets/js/data.js"></script>
@@ -38,32 +23,28 @@
       const pendingApps = allApps.filter(a => a.status === 'pending');
       
       const container = document.getElementById('applications-list');
-      container.innerHTML = '';
 
       if (pendingApps.length === 0) {
         container.innerHTML = '<p style="color: var(--text-muted);">Нет новых заявок на рассмотрении.</p>';
         return;
       }
 
-      pendingApps.forEach(app => {
-        container.innerHTML += `
-          <div class="card" style="border-left: 4px solid var(--accent);">
-            <h3 style="margin-bottom: 15px;">${app.firstName} ${app.lastName}</h3>
-            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">Никнейм: <a href="user-profile.html?nickname=${encodeURIComponent(app.nickname)}" style="color: var(--accent); font-weight: bold; text-decoration: underline;">${app.nickname}</a></p>
-            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">Возраст: <span style="color:#fff">${app.age} лет</span></p>
-            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">Город: <span style="color:#fff">${app.city || 'Не указан'}</span></p>
-            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">Email: <span style="color:#fff">${app.email}</span></p>
-            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">Тел: <span style="color:#fff">${app.phone}</span></p>
-            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Источник: <span style="color:#fff">${app.source || 'Не указан'}</span></p>
-            
-            <!-- Кнопка Начать переписку -->
-            <a href="messages.html?with=${encodeURIComponent(app.nickname)}" class="btn btn-outline" style="width: 100%; margin-bottom: 10px; border-color: #2196F3; color: #2196F3; display: block; text-align: center;">Начать переписку</a>
-            
-            <button class="btn" style="width: 100%; margin-bottom: 10px;" onclick="changeStatus(${app.id}, 'approved')">Одобрить</button>
-            <button class="btn btn-outline" style="width: 100%;" onclick="changeStatus(${app.id}, 'rejected')">Отклонить</button>
-          </div>
-        `;
-      });
+      container.innerHTML = pendingApps.map(app => `
+        <div class="card" style="border-left: 4px solid var(--accent);">
+          <h3 style="margin-bottom: 15px;">${escapeHtml(app.firstName)} ${escapeHtml(app.lastName)}</h3>
+          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">Никнейм: <a href="user-profile.html?nickname=${encodeURIComponent(app.nickname)}" style="color: var(--accent); font-weight: bold; text-decoration: underline;">${escapeHtml(app.nickname)}</a></p>
+          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">Возраст: <span style="color:#fff">${escapeHtml(app.age)} лет</span></p>
+          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">Город: <span style="color:#fff">${escapeHtml(app.city || 'Не указан')}</span></p>
+          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">Email: <span style="color:#fff">${escapeHtml(app.email)}</span></p>
+          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">Тел: <span style="color:#fff">${escapeHtml(app.phone)}</span></p>
+          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Источник: <span style="color:#fff">${escapeHtml(app.source || 'Не указан')}</span></p>
+          
+          <a href="messages.html?with=${encodeURIComponent(app.nickname)}" class="btn btn-outline" style="width: 100%; margin-bottom: 10px; border-color: #2196F3; color: #2196F3; display: block; text-align: center;">Начать переписку</a>
+          
+          <button class="btn" style="width: 100%; margin-bottom: 10px;" onclick="changeStatus(${app.id}, 'approved')">Одобрить</button>
+          <button class="btn btn-outline" style="width: 100%;" onclick="changeStatus(${app.id}, 'rejected')">Отклонить</button>
+        </div>
+      `).join('');
     }
 
     function changeStatus(id, newStatus) {
@@ -76,27 +57,7 @@
       }
     }
 
-    function renderDonations() {
-      const donations = JSON.parse(localStorage.getItem('gart_donations') || '[]');
-      const tbody = document.getElementById('donations-list');
-      if (donations.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="padding: 15px 0; color: var(--text-muted);">Пока нет донатов.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = [...donations].reverse().map(d => `
-        <tr style="border-bottom: 1px solid #222;">
-          <td style="padding: 12px 0; color: #fff;">${d.name}</td>
-          <td style="padding: 12px 0; color: var(--accent); font-weight: bold;">${d.amount} ₽</td>
-          <td style="padding: 12px 0; color: var(--text-muted);">${d.email}</td>
-          <td style="padding: 12px 0; color: #777; font-size: 12px;">${d.date}</td>
-        </tr>
-      `).join('');
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      renderApplications();
-      renderDonations();
-    });
+    document.addEventListener('DOMContentLoaded', renderApplications);
   </script>
 </body>
 </html>
