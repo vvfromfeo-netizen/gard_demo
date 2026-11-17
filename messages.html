@@ -46,7 +46,6 @@
     const startChatWith = urlParams.get('with');
     const prefillText = urlParams.get('text');
 
-    // In-memory кеш + синхронизация с localStorage
     function loadMessages() {
       const raw = localStorage.getItem('gart_messages');
       let msgs;
@@ -54,16 +53,12 @@
         msgs = JSON.parse(JSON.stringify(GART_DATA.initialMessages || {}));
         localStorage.setItem('gart_messages', JSON.stringify(msgs));
       } else {
-        try { msgs = JSON.parse(raw); }
-        catch (e) { msgs = {}; }
+        try { msgs = JSON.parse(raw); } catch (e) { msgs = {}; }
         if (typeof msgs !== 'object' || Array.isArray(msgs)) msgs = {};
       }
       return msgs;
     }
-
-    function saveMessages(msgs) {
-      localStorage.setItem('gart_messages', JSON.stringify(msgs));
-    }
+    function saveMessages(msgs) { localStorage.setItem('gart_messages', JSON.stringify(msgs)); }
 
     document.addEventListener('DOMContentLoaded', () => {
       if (startChatWith) {
@@ -207,9 +202,12 @@
         const isMine = m.author === user.nickname;
         const wrapperClass = isMine ? 'mine' : 'other';
         const bubbleClass = isMine ? 'msg-mine' : 'msg-other';
+        // Отступ справа, чтобы текст не перекрывался иконкой удаления
+        const bubbleStyle = isAdmin ? 'padding-right: 36px;' : '';
+
         return `
           <div class="msg-wrapper ${wrapperClass}">
-            <div class="msg-bubble ${bubbleClass}">
+            <div class="msg-bubble ${bubbleClass}" style="${bubbleStyle}">
               <div style="font-size: 11px; margin-bottom: 4px; font-weight: 600;">
                 ${isMine
                   ? `<span style="opacity: 0.7;">${escapeHtml(m.author)}</span>`
@@ -217,8 +215,8 @@
               </div>
               <div>${escapeHtml(m.text)}</div>
               <div style="font-size: 10px; text-align: right; margin-top: 6px; opacity: 0.65;">${escapeHtml(m.date)}</div>
+              ${isAdmin ? `<button class="msg-delete-icon" onclick="deleteMsg(${index})" title="Удалить сообщение">✕</button>` : ''}
             </div>
-            ${isAdmin ? `<button class="msg-delete-btn" onclick="deleteMsg(${index})">Удалить</button>` : ''}
           </div>
         `;
       }).join('');
@@ -243,7 +241,6 @@
       input.value = '';
       renderMessages();
       renderSidebar();
-      // сохраняем подсветку активного чата после re-render
       document.querySelectorAll('.chat-list-item').forEach(n => {
         if (n.dataset.chatId === currentChatId) n.classList.add('active');
       });
