@@ -10,14 +10,15 @@
   <main class="container" style="margin-top: 40px;">
     <h2 style="margin-bottom: 30px;">База участников клуба</h2>
     
-    <div class="card">
-      <table style="width: 100%; text-align: left; border-collapse: collapse;">
+    <div class="card" style="overflow-x: auto;">
+      <table style="width: 100%; text-align: left; border-collapse: collapse; min-width: 700px;">
         <thead>
           <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
             <th style="padding: 10px 0;">Имя (Реальное)</th>
             <th style="padding: 10px 0;">Никнейм</th>
             <th style="padding: 10px 0;">Email</th>
             <th style="padding: 10px 0;">Роль</th>
+            <th style="padding: 10px 0;">Посещений</th>
           </tr>
         </thead>
         <tbody id="users-list"></tbody>
@@ -30,6 +31,15 @@
   <script src="assets/js/guard.js"></script>
   <script src="assets/js/layout.js"></script>
   <script>
+    function getAttendanceCount(nickname) {
+      const attendance = JSON.parse(localStorage.getItem('gart_attendance') || '{}');
+      let count = 0;
+      for (const eventId in attendance) {
+        if (Array.isArray(attendance[eventId]) && attendance[eventId].includes(nickname)) count++;
+      }
+      return count;
+    }
+
     function renderUsers() {
       const tbody = document.getElementById('users-list');
       let allUsers = GART_DATA.users.map(u => ({ name: u.firstName + ' ' + u.lastName, nickname: u.nickname, email: u.email, role: u.role }));
@@ -52,12 +62,13 @@
         
         return `
           <tr style="border-bottom: 1px solid #222;">
-            <td style="padding: 12px 0; color: #fff; font-weight: bold;">${u.name}</td>
+            <td style="padding: 12px 0; color: #fff; font-weight: bold;">${escapeHtml(u.name)}</td>
             <td style="padding: 12px 0;">
-              <a href="user-profile.html?nickname=${encodeURIComponent(u.nickname)}" style="color: var(--accent); font-weight: bold; text-decoration: underline;">${u.nickname}</a>
+              <a href="user-profile.html?nickname=${encodeURIComponent(u.nickname)}" style="color: var(--accent); font-weight: bold; text-decoration: underline;">${escapeHtml(u.nickname)}</a>
             </td>
-            <td style="padding: 12px 0; color: var(--text-muted);">${u.email}</td>
+            <td style="padding: 12px 0; color: var(--text-muted);">${escapeHtml(u.email)}</td>
             <td style="padding: 12px 0; color: ${roleColor}; font-weight: bold; font-size: 14px;">${roleText}</td>
+            <td style="padding: 12px 0; color: var(--accent); font-weight: bold;">${getAttendanceCount(u.nickname)}</td>
           </tr>
         `;
       }).join('');
