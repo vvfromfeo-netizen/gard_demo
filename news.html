@@ -15,7 +15,6 @@
     <div class="card" id="add-news-form" style="display: none; border-color: var(--accent); margin-top: 40px;">
       <h3>Добавить новость</h3>
       
-      <!-- Иконка добавления фото (визуальная заглушка) -->
       <div style="border: 2px dashed #444; border-radius: 4px; padding: 30px; text-align: center; margin: 20px 0; cursor: pointer; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#777'" onmouseout="this.style.borderColor='#444'">
         <div style="font-size: 32px; color: #666; margin-bottom: 10px;">📷</div>
         <div style="color: #666; font-size: 14px;">Прикрепить фотографию</div>
@@ -33,6 +32,14 @@
   <script src="assets/js/guard.js"></script>
   <script src="assets/js/layout.js"></script>
   <script>
+    // Одноразовая миграция: чистим комментарии в уже сохранённых новостях
+    (function cleanNewsComments() {
+      const news = JSON.parse(localStorage.getItem('gart_news') || '[]');
+      let changed = false;
+      news.forEach(n => { if ('comments' in n) { delete n.comments; changed = true; } });
+      if (changed) localStorage.setItem('gart_news', JSON.stringify(news));
+    })();
+
     function renderNews() {
       const newsList = JSON.parse(localStorage.getItem('gart_news') || '[]');
       const user = GART_AUTH.getCurrentUser();
@@ -43,45 +50,25 @@
         document.getElementById('add-news-form').style.display = 'block';
       }
 
-      container.innerHTML = [...newsList].reverse().map(item => {
-        const comments = item.comments || [];
-        const commentsHTML = comments.map((c, idx) => `
-          <div style="margin-top: 10px; padding: 10px; background: #1a1a1a; border-left: 2px solid var(--border-color); font-size: 14px;">
-            <a href="user-profile.html?nickname=${encodeURIComponent(c.author)}" style="color: var(--accent); font-weight: bold; text-decoration: underline;">${c.author}</a>
-            <span style="color: #fff;">: ${c.text}</span>
-            ${isAdmin ? `<button onclick="deleteNewsComment(${item.id}, ${idx})" style="color:#F44336; background:none; border:none; cursor:pointer; float:right; font-size:12px;">Удалить</button>` : ''}
+      container.innerHTML = [...newsList].reverse().map(item => `
+        <div class="card" style="margin-bottom: 20px;">
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color: var(--accent); font-size: 14px;">${escapeHtml(item.date)}</span>
+            ${isAdmin ? `<button onclick="deleteNews(${item.id})" style="color:#F44336; background:none; border:none; cursor:pointer; font-size:14px;">Удалить новость</button>` : ''}
           </div>
-        `).join('');
-
-        return `
-          <div class="card" style="margin-bottom: 20px;">
-            <div style="display:flex; justify-content:space-between;">
-              <span style="color: var(--accent); font-size: 14px;">${item.date}</span>
-              ${isAdmin ? `<button onclick="deleteNews(${item.id})" style="color:#F44336; background:none; border:none; cursor:pointer; font-size:14px;">Удалить новость</button>` : ''}
-            </div>
-            <h3 style="margin: 10px 0;">${item.title}</h3>
-            <p style="color: var(--text-muted);">${item.text}</p>
-            
-            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #222;">
-              <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px;">Комментарии (${comments.length}):</p>
-              ${commentsHTML}
-              <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <input type="text" id="news-comment-${item.id}" class="form-control" placeholder="Ваш комментарий..." style="padding: 8px;">
-                <button class="btn" style="padding: 8px 15px;" onclick="addNewsComment(${item.id})">Ответить</button>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
+          <h3 style="margin: 10px 0;">${escapeHtml(item.title)}</h3>
+          <p style="color: var(--text-muted);">${escapeHtml(item.text)}</p>
+        </div>
+      `).join('');
     }
 
     function createNews() {
-      const title = document.getElementById('news-title').value;
-      const text = document.getElementById('news-text').value;
+      const title = document.getElementById('news-title').value.trim();
+      const text = document.getElementById('news-text').value.trim();
       if (!title || !text) return alert('Заполните поля');
       
-      let news = JSON.parse(localStorage.getItem('gart_news'));
-      news.push({ id: Date.now(), title, text, date: new Date().toLocaleDateString('ru-RU'), comments: [] });
+      let news = JSON.parse(localStorage.getItem('gart_news') || '[]');
+      news.push({ id: Date.now(), title, text, date: new Date().toLocaleDateString('ru-RU') });
       localStorage.setItem('gart_news', JSON.stringify(news));
       document.getElementById('news-title').value = '';
       document.getElementById('news-text').value = '';
@@ -90,34 +77,10 @@
 
     function deleteNews(id) {
       if (!confirm('Удалить новость?')) return;
-      let news = JSON.parse(localStorage.getItem('gart_news'));
+      let news = JSON.parse(localStorage.getItem('gart_news') || '[]');
       news = news.filter(n => n.id !== id);
       localStorage.setItem('gart_news', JSON.stringify(news));
       renderNews();
-    }
-
-    function addNewsComment(newsId) {
-      const input = document.getElementById(`news-comment-${newsId}`);
-      const text = input.value.trim();
-      if (!text) return;
-      const user = GART_AUTH.getCurrentUser();
-      let news = JSON.parse(localStorage.getItem('gart_news'));
-      const item = news.find(n => n.id === newsId);
-      if (item) {
-        item.comments.push({ author: user.nickname, text });
-        localStorage.setItem('gart_news', JSON.stringify(news));
-        renderNews();
-      }
-    }
-
-    function deleteNewsComment(newsId, commentIdx) {
-      let news = JSON.parse(localStorage.getItem('gart_news'));
-      const item = news.find(n => n.id === newsId);
-      if (item) {
-        item.comments.splice(commentIdx, 1);
-        localStorage.setItem('gart_news', JSON.stringify(news));
-        renderNews();
-      }
     }
 
     document.addEventListener('DOMContentLoaded', renderNews);
