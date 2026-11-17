@@ -13,9 +13,9 @@
         <h1>Сила внутри. Опора среди своих.</h1>
         <p>ГАРТ — сообщество для мужчин, которым важно физическое и психологическое здоровье, развитие и поддержка единомышленников. Здесь можно общаться без необходимости соответствовать чужим ожиданиям, делиться своим опытом, говорить о сложностях и находить опору в мужском сообществе.</p>
         <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
-          <a href="apply.html" class="btn">Подать заявку</a>
+          <a href="apply.html" id="hero-apply-btn" class="btn">Подать заявку</a>
           <a href="test.html" class="btn btn-outline">Пройти тест</a>
-          <a href="donate.html" class="btn" style="background: transparent; border: 2px solid var(--accent); color: var(--accent);">Помочь проекту</a>
+          <a href="donate.html" class="btn btn-outline">Помочь проекту</a>
         </div>
       </div>
     </section>
@@ -47,5 +47,15 @@
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/guard.js"></script>
   <script src="assets/js/layout.js"></script>
+  <script>
+    // Скрываем «Подать заявку» на главной для всех авторизованных
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = GART_AUTH.getCurrentUser();
+      const applyBtn = document.getElementById('hero-apply-btn');
+      if (user && applyBtn) {
+        applyBtn.style.display = 'none';
+      }
+    });
+  </script>
 </body>
 </html>
