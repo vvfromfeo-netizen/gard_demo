@@ -1,7 +1,7 @@
-// Сброс до версии 6.0 для применения новых данных
-if (localStorage.getItem('gart_version') !== '6.0') {
+// Сброс до версии 7.0 — гарантирует пересоздание данных
+if (localStorage.getItem('gart_version') !== '7.0') {
     localStorage.clear();
-    localStorage.setItem('gart_version', '6.0');
+    localStorage.setItem('gart_version', '7.0');
 }
 
 const GART_DATA = {
@@ -50,10 +50,11 @@ const GART_DATA = {
   ]
 };
 
-// Записываем данные, ТОЛЬКО если их еще нет в localStorage
+// Инициализация localStorage — только если данных нет
 if (!localStorage.getItem('gart_applications')) localStorage.setItem('gart_applications', JSON.stringify(GART_DATA.applications));
 if (!localStorage.getItem('gart_posts')) localStorage.setItem('gart_posts', JSON.stringify(GART_DATA.posts));
 if (!localStorage.getItem('gart_news')) localStorage.setItem('gart_news', JSON.stringify(GART_DATA.news));
 if (!localStorage.getItem('gart_chat_topics')) localStorage.setItem('gart_chat_topics', JSON.stringify(GART_DATA.chatTopics));
 if (!localStorage.getItem('gart_messages')) localStorage.setItem('gart_messages', JSON.stringify(GART_DATA.initialMessages));
 if (!localStorage.getItem('gart_shop')) localStorage.setItem('gart_shop', JSON.stringify(GART_DATA.shopItems));
+if (!localStorage.getItem('gart_events')) localStorage.setItem('gart_events', JSON.stringify(GART_DATA.events));
