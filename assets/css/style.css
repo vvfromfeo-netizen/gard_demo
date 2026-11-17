@@ -22,7 +22,6 @@ body {
   color: var(--text-main);
   font-family: var(--font-text);
   line-height: 1.6;
-  padding-bottom: 60px; /* Место для dev-панели */
 }
 
 h1, h2, h3, h4 {
@@ -42,6 +41,18 @@ a:hover {
   opacity: 0.8;
 }
 
+/* Доступность: видимый фокус */
+a:focus-visible,
+.btn:focus-visible,
+.form-control:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* --- КОМПОНЕНТЫ --- */
 .container {
   max-width: 1200px;
@@ -58,6 +69,7 @@ a:hover {
   font-weight: 700;
   text-transform: uppercase;
   border: none;
+  border-radius: 4px;
   cursor: pointer;
   transition: background 0.3s;
 }
@@ -71,6 +83,7 @@ a:hover {
   background: transparent;
   color: var(--accent);
   border: 2px solid var(--accent);
+  border-radius: 4px;
 }
 
 .btn-outline:hover {
@@ -84,6 +97,11 @@ a:hover {
   padding: 24px;
   border-radius: 4px;
   margin-bottom: 20px;
+  transition: border-color 0.2s ease;
+}
+
+.card:hover {
+  border-color: #555;
 }
 
 .form-group {
@@ -140,7 +158,7 @@ header {
 }
 
 nav a {
-  margin-left: 20px;
+  margin-left: 0;
   color: var(--text-main);
   font-weight: 500;
 }
@@ -149,7 +167,6 @@ nav a:hover {
   color: var(--accent);
 }
 
-/* Активный пункт меню */
 nav a.nav-active {
   color: var(--accent) !important;
   font-weight: 700;
@@ -179,6 +196,7 @@ footer {
   justify-content: center;
   gap: 10px;
   z-index: 9999;
+  flex-wrap: wrap;
 }
 
 #dev-panel button {
@@ -210,12 +228,12 @@ footer {
 }
 
 .hero h1 {
-  font-size: 48px;
+  font-size: clamp(32px, 6vw, 48px);
   margin-bottom: 20px;
 }
 
 .hero p {
-  font-size: 20px;
+  font-size: clamp(16px, 2.2vw, 20px);
   color: var(--text-muted);
   max-width: 800px;
   margin: 0 auto 40px auto;
@@ -253,6 +271,11 @@ footer {
   background-color: #222;
   color: var(--accent);
 }
+
+.dropdown.show .dropdown-content {
+  display: block;
+}
+
 /* Аватарка в шапке */
 .user-avatar {
   display: inline-flex;
@@ -270,14 +293,11 @@ footer {
   margin-left: 15px;
   transition: transform 0.2s;
 }
+
 .user-avatar:hover {
   transform: scale(1.1);
   color: #000;
   opacity: 1;
-}
-
-.dropdown.show .dropdown-content {
-  display: block;
 }
 
 /* Счетчик на иконке */
@@ -291,6 +311,7 @@ footer {
   font-size: 20px;
   text-decoration: none;
 }
+
 .icon-badge .badge {
   position: absolute;
   top: -5px;
@@ -323,12 +344,13 @@ footer {
 .msg-bubble { max-width: 80%; padding: 10px; border-radius: 8px; font-size: 14px; }
 .msg-mine { align-self: flex-end; background: var(--accent); color: #000; }
 .msg-other { align-self: flex-start; background: #333; color: #fff; }
-/* --- МОДАЛЬНОЕ ОКНО (ТРЕБУЕТСЯ АВТОРИЗАЦИЯ) --- */
+
+/* --- МОДАЛЬНОЕ ОКНО --- */
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.85);
-  display: none; /* Скрыто по умолчанию */
+  display: none;
   align-items: center;
   justify-content: center;
   z-index: 10000;
@@ -388,4 +410,29 @@ footer {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+/* --- МОБИЛЬНАЯ АДАПТАЦИЯ ШАПКИ --- */
+@media (max-width: 960px) {
+  .header-inner {
+    flex-wrap: wrap;
+  }
+  nav {
+    width: 100%;
+    overflow-x: auto;
+    justify-content: flex-start !important;
+    padding: 8px 0;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  nav a { white-space: nowrap; }
+}
+
+/* --- СНИЖЕНИЕ АНИМАЦИЙ --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+  }
 }
