@@ -1,3 +1,6 @@
+// Глобальный helper для экранирования HTML (защита от XSS)
+window.escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
 document.addEventListener('DOMContentLoaded', () => {
   const user = GART_AUTH.getCurrentUser();
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
@@ -37,12 +40,19 @@ document.addEventListener('DOMContentLoaded', () => {
           ${!user ? `
             ${navLink('index.html', 'Главная')}
             ${navLink('news.html', 'Новости')}
+            ${navLink('test.html', 'Тест')}
             ${navLink('rating.html', 'Рейтинг')}
-            ${navLink('stub.html', 'Партнеры')}
-            ${navLink('stub.html', 'СМИ')}
-            ${navLink('stub.html', 'Отзывы')}
             ${navLink('contacts.html', 'Контакты')}
-            ${navLink('stub.html', 'Правовая')}
+            <div class="dropdown" id="dropdown-menu">
+              <a href="#" id="dropdown-btn" style="cursor: pointer;">Ещё ▾</a>
+              <div class="dropdown-content">
+                <a href="index.html#about">О проекте</a>
+                <a href="stub.html">Партнеры</a>
+                <a href="stub.html">СМИ о нас</a>
+                <a href="stub.html">Отзывы</a>
+                <a href="stub.html">Правовая информация</a>
+              </div>
+            </div>
           ` : ''}
 
           ${user ? `
@@ -54,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
           ${user && user.role === 'admin' ? `
             ${navLink('admin-applications.html', 'Заявки', 'color: #4CAF50;')}
-            ${navLink('admin-events.html', 'Мероприятия', 'color: #4CAF50;')}
             ${navLink('admin-users.html', 'Участники', 'color: #4CAF50;')}
           ` : ''}
 
@@ -115,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (!window.location.search.includes('clean=1')) {
     document.body.insertAdjacentHTML('beforeend', devPanelHTML);
+    document.body.style.paddingBottom = '60px';
   }
 
   const dropdownBtn = document.getElementById('dropdown-btn');
