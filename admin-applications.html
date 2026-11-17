@@ -9,7 +9,7 @@
 <body data-require="admin">
   <main class="container" style="margin-top: 40px;">
     <h2 style="margin-bottom: 30px;">Входящие заявки (На рассмотрении)</h2>
-    
+
     <div id="applications-list" class="grid"></div>
   </main>
 
@@ -21,7 +21,6 @@
     function renderApplications() {
       const allApps = JSON.parse(localStorage.getItem('gart_applications') || '[]');
       const pendingApps = allApps.filter(a => a.status === 'pending');
-      
       const container = document.getElementById('applications-list');
 
       if (pendingApps.length === 0) {
@@ -38,12 +37,15 @@
           <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">Email: <span style="color:#fff">${escapeHtml(app.email)}</span></p>
           <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">Тел: <span style="color:#fff">${escapeHtml(app.phone)}</span></p>
           <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Источник: <span style="color:#fff">${escapeHtml(app.source || 'Не указан')}</span></p>
-          
-          <!-- Убрали голубой цвет, сделали стандартную кнопку btn-outline -->
-          <a href="messages.html?with=${encodeURIComponent(app.nickname)}" class="btn btn-outline" style="width: 100%; margin-bottom: 10px; display: block; text-align: center;">Начать переписку</a>
-          
-          <button class="btn" style="width: 100%; margin-bottom: 10px;" onclick="changeStatus(${app.id}, 'approved')">Одобрить</button>
-          <button class="btn btn-outline" style="width: 100%;" onclick="changeStatus(${app.id}, 'rejected')">Отклонить</button>
+
+          <!-- Второстепенное: серый ghost с иконкой -->
+          <a href="messages.html?with=${encodeURIComponent(app.nickname)}" class="btn btn-ghost" style="width: 100%; margin-bottom: 10px; display: flex; text-align: center;">💬 Начать переписку</a>
+
+          <!-- Главное: оранжевая заливка -->
+          <button class="btn" style="width: 100%; margin-bottom: 10px;" onclick="changeStatus(${app.id}, 'approved')">✓ Одобрить</button>
+
+          <!-- Деструктивное: красный контур -->
+          <button class="btn btn-danger-outline" style="width: 100%;" onclick="changeStatus(${app.id}, 'rejected')">✕ Отклонить</button>
         </div>
       `).join('');
     }
@@ -55,7 +57,7 @@
         apps[index].status = newStatus;
         localStorage.setItem('gart_applications', JSON.stringify(apps));
         renderApplications();
-        showToast(newStatus === 'approved' ? 'Заявка одобрена' : 'Заявка отклонена', 'info');
+        showToast(newStatus === 'approved' ? 'Заявка одобрена' : 'Заявка отклонена', newStatus === 'approved' ? 'success' : 'info');
       }
     }
 
