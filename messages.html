@@ -9,7 +9,6 @@
 <body data-require="member">
   <main class="container" style="margin-top: 40px;">
     <h2>Сообщения</h2>
-    
     <div class="chat-layout" style="margin-top: 20px;">
       <div class="chat-sidebar">
         <div class="chat-tabs">
@@ -18,10 +17,9 @@
         </div>
         <div id="sidebar-content" style="overflow-y: auto; flex:1;"></div>
         <div id="admin-add-topic" style="display:none; padding: 10px; border-top: 1px solid #333;">
-          <button class="btn" style="width: 100%; padding: 5px; font-size: 12px;" onclick="addTopic()">+ Новая тема</button>
+          <button class="btn" style="width: 100%; padding: 8px; font-size: 12px;" onclick="addTopic()">+ Новая тема</button>
         </div>
       </div>
-
       <div class="chat-main">
         <div class="chat-header" id="chat-header">Выберите чат</div>
         <div class="chat-messages" id="chat-messages"></div>
@@ -52,7 +50,7 @@
         currentTab = 'personal';
         switchTab('personal');
         setTimeout(() => {
-          openChat(`dm_${startChatWith}`);
+          openChat(`dm_${encodeURIComponent(startChatWith)}`);
           if (prefillText) document.getElementById('msg-input').value = prefillText;
         }, 100);
       } else {
@@ -87,12 +85,13 @@
           const lastMsg = msgs[msgs.length - 1];
           const lastText = lastMsg ? `${escapeHtml(lastMsg.author)}: ${escapeHtml(lastMsg.text.substring(0, 20))}...` : 'Нет сообщений';
           const lastTime = lastMsg ? escapeHtml(lastMsg.date) : '';
+          const encoded = encodeURIComponent(t);
 
           container.innerHTML += `
-            <div class="chat-list-item" onclick="openChat('topic_${encodeURIComponent(t)}')" id="list-topic_${escapeHtml(t)}">
-              <div>
+            <div class="chat-list-item" onclick="openChat('topic_${encoded}')" id="list-topic_${encoded}">
+              <div style="min-width:0;">
                 <div style="color: #fff; font-weight: bold; margin-bottom: 5px;"># ${escapeHtml(t)}</div>
-                <div style="font-size: 12px; color: var(--text-muted);">${lastText}</div>
+                <div style="font-size: 12px; color: var(--text-muted); overflow:hidden; text-overflow:ellipsis;">${lastText}</div>
               </div>
               <div style="text-align: right; font-size: 12px; color: var(--text-muted);">
                 <div>${lastTime}</div>
@@ -107,7 +106,6 @@
         const apps = JSON.parse(localStorage.getItem('gart_applications') || '[]');
         const approved = apps.filter(a => a.status === 'approved');
         const pending = apps.filter(a => a.status === 'pending');
-        
         const appContacts = isAdmin ? [...pending, ...approved] : approved;
         const allContacts = [...users, ...appContacts];
         const uniqueContacts = Array.from(new Map(allContacts.map(c => [c.nickname, c])).values());
@@ -115,20 +113,20 @@
         uniqueContacts.forEach(u => {
           const nick = u.nickname;
           if (!nick) return;
-          
           const chatId = `dm_${nick}`;
           const msgs = allMsgs[chatId] || [];
           const lastMsg = msgs[msgs.length - 1];
-          
+
           if (isAdmin || msgs.length > 0) {
             const lastText = lastMsg ? escapeHtml(lastMsg.text.substring(0, 25)) + '...' : 'Нет сообщений';
             const lastTime = lastMsg ? escapeHtml(lastMsg.date) : '';
+            const encoded = encodeURIComponent(nick);
 
             container.innerHTML += `
-              <div class="chat-list-item" onclick="openChat('dm_${encodeURIComponent(nick)}')" id="list-dm_${escapeHtml(nick)}">
-                <div>
+              <div class="chat-list-item" onclick="openChat('dm_${encoded}')" id="list-dm_${encoded}">
+                <div style="min-width:0;">
                   <div style="color: #fff; font-weight: bold; margin-bottom: 5px;">${escapeHtml(nick)}</div>
-                  <div style="font-size: 12px; color: var(--text-muted);">${lastText}</div>
+                  <div style="font-size: 12px; color: var(--text-muted); overflow:hidden; text-overflow:ellipsis;">${lastText}</div>
                 </div>
                 <div style="font-size: 12px; color: var(--text-muted);">${lastTime}</div>
               </div>
@@ -152,7 +150,6 @@
         const topicName = decodeURIComponent(chatId.replace('topic_', ''));
         headerEl.innerText = `# ${topicName}`;
       }
-      
       document.getElementById('chat-input-area').style.display = 'flex';
       renderMessages();
     }
@@ -161,17 +158,17 @@
       const allMsgs = JSON.parse(localStorage.getItem('gart_messages') || '{}');
       const chatMsgs = allMsgs[currentChatId] || [];
       const container = document.getElementById('chat-messages');
-      
+
       container.innerHTML = chatMsgs.map((m, index) => `
         <div class="msg-bubble ${m.author === user.nickname ? 'msg-mine' : 'msg-other'}">
-          <div style="font-size: 10px; margin-bottom: 3px;">
-            ${m.author === user.nickname 
-              ? `<span style="opacity: 0.7;">${escapeHtml(m.author)}</span>` 
-              : `<a href="user-profile.html?nickname=${encodeURIComponent(m.author)}" style="color: inherit; text-decoration: underline; opacity: 0.8;">${escapeHtml(m.author)}</a>`}
+          <div style="font-size: 11px; margin-bottom: 4px; font-weight: 600;">
+            ${m.author === user.nickname
+              ? `<span style="opacity: 0.7;">${escapeHtml(m.author)}</span>`
+              : `<a href="user-profile.html?nickname=${encodeURIComponent(m.author)}" style="color: inherit; text-decoration: underline; opacity: 0.85;">${escapeHtml(m.author)}</a>`}
           </div>
           ${escapeHtml(m.text)}
-          ${isAdmin ? `<button onclick="deleteMsg(${index})" style="background:none; border:none; color:red; font-size:12px; cursor:pointer; float:right; margin-left:10px;">&times;</button>` : ''}
-          <div style="font-size: 10px; text-align: right; margin-top: 5px; opacity: 0.5;">${escapeHtml(m.date)}</div>
+          ${isAdmin ? `<button onclick="deleteMsg(${index})" style="background:none; border:none; color:red; font-size:14px; cursor:pointer; float:right; margin-left:10px;">&times;</button>` : ''}
+          <div style="font-size: 10px; text-align: right; margin-top: 6px; opacity: 0.6;">${escapeHtml(m.date)}</div>
         </div>
       `).join('');
       container.scrollTop = container.scrollHeight;
@@ -184,13 +181,12 @@
 
       let allMsgs = JSON.parse(localStorage.getItem('gart_messages') || '{}');
       if (!allMsgs[currentChatId]) allMsgs[currentChatId] = [];
-      
-      allMsgs[currentChatId].push({ 
-        author: user.nickname, 
+      allMsgs[currentChatId].push({
+        author: user.nickname,
         text: text,
         date: new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'})
       });
-      
+
       localStorage.setItem('gart_messages', JSON.stringify(allMsgs));
       input.value = '';
       renderMessages();
