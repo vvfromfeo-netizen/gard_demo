@@ -1,5 +1,22 @@
-// Глобальный helper для экранирования HTML (защита от XSS)
 window.escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+window.showToast = function(message, type = 'success') {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement('div');
+  toast.className = 'toast' + (type === 'error' ? ' error' : type === 'info' ? ' info' : '');
+  toast.innerHTML = window.escapeHtml(message);
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('removing');
+    setTimeout(() => toast.remove(), 320);
+  }, 3000);
+};
 
 document.addEventListener('DOMContentLoaded', () => {
   const user = GART_AUTH.getCurrentUser();
@@ -8,6 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const navLink = (href, text, style = '') => {
     const isActive = currentPath === href || (href.includes('#') && currentPath === href.split('#')[0]);
     return `<a href="${href}" class="${isActive ? 'nav-active' : ''}" style="${style}">${text}</a>`;
+  };
+
+  const adminPill = (href, text) => {
+    const isActive = currentPath === href;
+    return `<a href="${href}" class="nav-pill${isActive ? ' active' : ''}">${text}</a>`;
   };
 
   let dropdownContent = `
@@ -61,8 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
           ` : ''}
 
           ${user && user.role === 'admin' ? `
-            ${navLink('admin-applications.html', 'Заявки', 'color: #4CAF50;')}
-            ${navLink('admin-users.html', 'Участники', 'color: #4CAF50;')}
+            ${adminPill('admin-applications.html', 'Заявки')}
+            ${adminPill('admin-users.html', 'Участники')}
           ` : ''}
 
           ${user ? `
