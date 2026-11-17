@@ -11,6 +11,20 @@
     <h2>Афиша мероприятий</h2>
     <p style="color: var(--text-muted); margin-bottom: 30px;">Здесь вы можете узнать, куда и когда мы идем.</p>
 
+    <div id="admin-create-block" class="card" style="display:none; border-color: var(--accent); margin-bottom: 40px;">
+      <h3>Добавить событие</h3>
+      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+        <input type="text" id="ev-title" class="form-control" placeholder="Название">
+        <input type="date" id="ev-date" class="form-control">
+        <input type="text" id="ev-place" class="form-control" placeholder="Место">
+        <select id="ev-status" class="form-control">
+          <option value="upcoming">Предстоящее</option>
+          <option value="past">Прошедшее</option>
+        </select>
+      </div>
+      <button class="btn" style="margin-top: 15px;" onclick="addEvent()">Создать</button>
+    </div>
+
     <h3 style="margin-bottom: 20px; color: var(--accent);">Предстоящие события</h3>
     <div class="grid" id="upcoming-events"></div>
 
@@ -18,35 +32,224 @@
     <div class="grid" id="past-events"></div>
   </main>
 
+  <div class="modal-overlay" id="attendance-modal">
+    <div class="modal-content" style="max-width: 560px; text-align: left;">
+      <button class="modal-close" onclick="closeAttendanceModal()">&times;</button>
+      <h3 class="modal-title" style="text-align: left; margin-bottom: 6px;">Отметить явку</h3>
+      <p id="attendance-event-title" style="color: var(--accent); margin-bottom: 16px; font-size: 14px;"></p>
+
+      <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+        <input type="text" id="attendance-search" class="form-control" placeholder="Поиск по нику, имени или фамилии..." oninput="renderAttendanceList()" style="flex: 1;">
+        <button class="btn btn-outline" style="padding: 10px 14px; font-size: 12px; flex-shrink:0;" onclick="selectAllAttendance()">Все</button>
+        <button class="btn btn-outline" style="padding: 10px 14px; font-size: 12px; flex-shrink:0;" onclick="clearAttendance()">Сброс</button>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; padding: 0 4px;">
+        <span id="attendance-counter">Выбрано: 0</span>
+        <span id="attendance-total">0 участников</span>
+      </div>
+
+      <div id="attendance-users-list" style="max-height: 360px; overflow-y: auto; text-align: left; margin-bottom: 16px; border: 1px solid var(--border-color); border-radius: 12px;"></div>
+
+      <button class="btn" style="width: 100%;" onclick="saveAttendance()">Сохранить явку</button>
+    </div>
+  </div>
+
   <script src="assets/js/data.js"></script>
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/guard.js"></script>
   <script src="assets/js/layout.js"></script>
   <script>
+    let currentEventId = null;
+    let attendanceUsersCache = [];
+
+    function getEvents() {
+      const stored = JSON.parse(localStorage.getItem('gart_events') || 'null');
+      if (stored) return stored;
+      localStorage.setItem('gart_events', JSON.stringify(GART_DATA.events));
+      return GART_DATA.events;
+    }
+    function saveEvents(events) { localStorage.setItem('gart_events', JSON.stringify(events)); }
+
     function renderEvents() {
-      const events = GART_DATA.events;
+      const events = getEvents();
+      const user = GART_AUTH.getCurrentUser();
+      const isAdmin = user && user.role === 'admin';
+      document.getElementById('admin-create-block').style.display = isAdmin ? 'block' : 'none';
+
+      const attendance = JSON.parse(localStorage.getItem('gart_attendance') || '{}');
       const upcoming = events.filter(e => e.status === 'upcoming');
       const past = events.filter(e => e.status === 'past');
 
-      const createCard = (e) => `
-        <div class="card" style="${e.status === 'past' ? 'opacity: 0.75;' : ''}">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-            <h4 style="color: #fff;">${e.title}</h4>
-            <span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: ${e.status === 'past' ? '#444' : 'var(--accent)'}; color: ${e.status === 'past' ? '#aaa' : '#000'};">
-              ${e.status === 'past' ? 'Завершено' : 'Скоро'}
-            </span>
-          </div>
-          <p style="color: var(--accent); font-weight: bold; margin-bottom: 10px;">${e.date}</p>
-          <p style="color: var(--text-muted); margin-bottom: 5px;">Место: ${e.place}</p>
-          <p style="color: var(--text-muted); margin-bottom: 20px;">Формат: ${e.format}</p>
-          <a href="event.html?id=${e.id}" class="btn btn-outline" style="width: 100%; text-align: center; display: block;">
-            Подробнее
-          </a>
-        </div>
-      `;
+      const createCard = (e) => {
+        const attendedCount = Array.isArray(attendance[e.id]) ? attendance[e.id].length : 0;
+        const adminControls = isAdmin ? `
+          <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
+            <button class="btn btn-outline" style="flex:1; padding:10px;" onclick="openAttendanceModal(${e.id})">
+              Явка${attendedCount ? ` · ${attendedCount}` : ''}
+            </button>
+            <button class="btn" style="background:#F44336; color:#fff; flex:1; padding:10px; box-shadow:none;" onclick="deleteEvent(${e.id})">Удалить</button>
+          </div>` : '';
 
-      document.getElementById('upcoming-events').innerHTML = upcoming.length ? upcoming.map(createCard).join('') : '<p>Пока нет предстоящих событий.</p>';
-      document.getElementById('past-events').innerHTML = past.length ? past.map(createCard).join('') : '<p>Пока нет прошедших событий.</p>';
+        return `
+          <div class="card event-card" style="${e.status === 'past' ? 'opacity: 0.78;' : ''}">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap:10px;">
+              <h4 style="color: #fff; flex:1;">${escapeHtml(e.title)}</h4>
+              <span class="status-badge ${e.status === 'past' ? 'past' : 'upcoming'}">
+                ${e.status === 'past' ? 'Завершено' : 'Скоро'}
+              </span>
+            </div>
+            <p style="color: var(--accent); font-weight: 700; margin-bottom: 12px; letter-spacing:0.5px;">${escapeHtml(e.date)}</p>
+            <p style="color: var(--text-muted); margin-bottom: 4px;">📍 ${escapeHtml(e.place)}</p>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">🎯 ${escapeHtml(e.format || 'Офлайн')}</p>
+            <a href="event.html?id=${e.id}" class="btn btn-outline" style="width: 100%; text-align: center; display: flex;">Подробнее</a>
+            ${adminControls}
+          </div>
+        `;
+      };
+
+      document.getElementById('upcoming-events').innerHTML = upcoming.length
+        ? upcoming.map(createCard).join('')
+        : '<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-title">Пока пусто</div><p>Предстоящих событий нет</p></div>';
+      document.getElementById('past-events').innerHTML = past.length
+        ? past.map(createCard).join('')
+        : '<div class="empty-state"><div class="empty-state-icon">🗓️</div><div class="empty-state-title">Архив пуст</div></div>';
+    }
+
+    function addEvent() {
+      const title = document.getElementById('ev-title').value.trim();
+      const date = document.getElementById('ev-date').value;
+      const place = document.getElementById('ev-place').value.trim();
+      const status = document.getElementById('ev-status').value;
+      if (!title || !date || !place) return showToast('Заполните все поля', 'error');
+
+      const events = getEvents();
+      events.push({ id: Date.now(), title, date, place, status, format: 'Офлайн' });
+      saveEvents(events);
+      document.getElementById('ev-title').value = '';
+      document.getElementById('ev-date').value = '';
+      document.getElementById('ev-place').value = '';
+      renderEvents();
+      showToast('Событие создано');
+    }
+
+    function deleteEvent(id) {
+      if (!confirm('Удалить событие?')) return;
+      saveEvents(getEvents().filter(e => e.id !== id));
+      const attendance = JSON.parse(localStorage.getItem('gart_attendance') || '{}');
+      delete attendance[id];
+      localStorage.setItem('gart_attendance', JSON.stringify(attendance));
+      localStorage.removeItem(`gart_event_${id}`);
+      renderEvents();
+      showToast('Событие удалено', 'info');
+    }
+
+    function openAttendanceModal(eventId) {
+      currentEventId = eventId;
+      const event = getEvents().find(e => e.id === eventId);
+      document.getElementById('attendance-event-title').innerText = event ? event.title : 'Событие';
+      document.getElementById('attendance-search').value = '';
+
+      const allUsers = GART_DATA.users.filter(u => u.role !== 'admin');
+      const approved = JSON.parse(localStorage.getItem('gart_applications') || '[]').filter(a => a.status === 'approved');
+      const members = [...allUsers, ...approved].filter(u => u.nickname);
+
+      const attendance = JSON.parse(localStorage.getItem('gart_attendance') || '{}');
+      const attendedList = attendance[eventId] || [];
+
+      attendanceUsersCache = members.map(u => ({
+        nickname: u.nickname,
+        firstName: u.firstName || u.name || '',
+        lastName: u.lastName || '',
+        attended: attendedList.includes(u.nickname)
+      }));
+
+      renderAttendanceList();
+      document.getElementById('attendance-modal').style.display = 'flex';
+      setTimeout(() => document.getElementById('attendance-search').focus(), 60);
+    }
+
+    function renderAttendanceList() {
+      const query = document.getElementById('attendance-search').value.toLowerCase().trim();
+      const list = document.getElementById('attendance-users-list');
+
+      const filtered = attendanceUsersCache.filter(u => {
+        if (!query) return true;
+        return u.nickname.toLowerCase().includes(query) ||
+               u.firstName.toLowerCase().includes(query) ||
+               u.lastName.toLowerCase().includes(query);
+      });
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty-state" style="padding: 40px 20px;"><div class="empty-state-icon">🔍</div><div class="empty-state-title">Никого не нашли</div></div>';
+      } else {
+        list.innerHTML = filtered.map(u => {
+          const initials = (u.nickname || u.firstName || '?').charAt(0).toUpperCase();
+          const realName = `${u.firstName} ${u.lastName}`.trim();
+          return `
+            <label class="attendance-row">
+              <input type="checkbox" data-nick="${escapeHtml(u.nickname)}" ${u.attended ? 'checked' : ''} onchange="onAttendanceToggle(this)" class="attendance-checkbox">
+              <div class="attendance-avatar">${escapeHtml(initials)}</div>
+              <div style="min-width: 0; flex: 1;">
+                <div style="color: #fff; font-weight: 600; font-size: 14px;">${escapeHtml(u.nickname)}</div>
+                ${realName ? `<div style="color: var(--text-muted); font-size: 12px;">${escapeHtml(realName)}</div>` : ''}
+              </div>
+            </label>
+          `;
+        }).join('');
+      }
+
+      updateAttendanceCounter();
+    }
+
+    function onAttendanceToggle(cb) {
+      const u = attendanceUsersCache.find(x => x.nickname === cb.dataset.nick);
+      if (u) u.attended = cb.checked;
+      updateAttendanceCounter();
+    }
+
+    function updateAttendanceCounter() {
+      const total = attendanceUsersCache.filter(u => u.attended).length;
+      document.getElementById('attendance-counter').innerText = `Выбрано: ${total}`;
+      document.getElementById('attendance-total').innerText = `${attendanceUsersCache.length} участников`;
+    }
+
+    function selectAllAttendance() {
+      const query = document.getElementById('attendance-search').value.toLowerCase().trim();
+      attendanceUsersCache.forEach(u => {
+        const matches = !query ||
+          u.nickname.toLowerCase().includes(query) ||
+          u.firstName.toLowerCase().includes(query) ||
+          u.lastName.toLowerCase().includes(query);
+        if (matches) u.attended = true;
+      });
+      renderAttendanceList();
+    }
+
+    function clearAttendance() {
+      const query = document.getElementById('attendance-search').value.toLowerCase().trim();
+      attendanceUsersCache.forEach(u => {
+        const matches = !query ||
+          u.nickname.toLowerCase().includes(query) ||
+          u.firstName.toLowerCase().includes(query) ||
+          u.lastName.toLowerCase().includes(query);
+        if (matches) u.attended = false;
+      });
+      renderAttendanceList();
+    }
+
+    function closeAttendanceModal() {
+      document.getElementById('attendance-modal').style.display = 'none';
+    }
+
+    function saveAttendance() {
+      const attendedList = attendanceUsersCache.filter(u => u.attended).map(u => u.nickname);
+      const attendance = JSON.parse(localStorage.getItem('gart_attendance') || '{}');
+      attendance[currentEventId] = attendedList;
+      localStorage.setItem('gart_attendance', JSON.stringify(attendance));
+      closeAttendanceModal();
+      renderEvents();
+      showToast(`Явка сохранена: ${attendedList.length} из ${attendanceUsersCache.length}`);
     }
 
     document.addEventListener('DOMContentLoaded', renderEvents);
